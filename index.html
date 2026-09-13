@@ -529,15 +529,16 @@ function showPage(name){
   if(name==="dashboard")renderDashboard();
   if(name==="settings")renderSettings();
 }
-function renderDashboard(){
-  const query=document.getElementById("searchInput").value.trim().toLowerCase();
+function renderDashboardMetrics(){
   const mrr=state.quotes.filter(q=>["Approved","Paid"].includes(q.status)).reduce((s,q)=>s+Number(q.retainer||0),0);
   const totalExpected=state.quotes.reduce((s,q)=>s+calcQuote(q).expected,0);
   document.getElementById("mrrValue").textContent=money(mrr);
   document.getElementById("quoteCount").textContent=state.quotes.length;
   document.getElementById("profitValue").textContent=money(totalExpected);
   document.getElementById("healthMetric").classList.toggle("loss",totalExpected<0);
-
+}
+function renderQuoteList(){
+  const query=document.getElementById("searchInput").value.trim().toLowerCase();
   const list=state.quotes.filter(q=>(q.clientName||"").toLowerCase().includes(query));
   const container=document.getElementById("quoteList");
   if(!list.length){container.innerHTML='<div class="empty">No saved quotes found.</div>';return}
@@ -567,6 +568,10 @@ function renderDashboard(){
       </div>
     </article>`
   }).join("");
+}
+function renderDashboard(){
+  renderDashboardMetrics();
+  renderQuoteList();
 }
 function renderSettings(){
   const s=state.settings;
@@ -704,7 +709,8 @@ function setupLock(){
 
   document.querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
 document.getElementById("themeBtn").onclick=()=>{state.settings.darkMode=!state.settings.darkMode;saveState();applyTheme()};
-document.getElementById("searchInput").oninput=renderDashboard;
+// ⚡ Bolt: Bind search directly to renderQuoteList to avoid recalculating global MRR/profit metrics on every keystroke
+document.getElementById("searchInput").oninput=renderQuoteList;
 document.getElementById("simpleTab").onclick=()=>{currentMode="simple";document.getElementById("simpleTab").classList.add("active");document.getElementById("advancedTab").classList.remove("active");document.querySelectorAll(".advanced-only").forEach(x=>x.classList.add("hidden"));document.getElementById("formModeText").textContent="Simple mode"};
 document.getElementById("advancedTab").onclick=()=>{currentMode="advanced";document.getElementById("advancedTab").classList.add("active");document.getElementById("simpleTab").classList.remove("active");document.querySelectorAll(".advanced-only").forEach(x=>x.classList.remove("hidden"));document.getElementById("formModeText").textContent="Advanced mode"};
 document.getElementById("addExpense").onclick=()=>{addExpenseRow();updateFormCalculations()};
