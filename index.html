@@ -499,6 +499,11 @@ function money(n){return `${state.settings.currency}${Number(n||0).toLocaleStrin
 function today(){return new Date().toISOString().slice(0,10)}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
 function esc(value){return String(value??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function safeUrl(url){
+  const u = String(url || "").trim();
+  if (/^(https?:\/\/|data:image\/)/i.test(u)) return u;
+  return "";
+}
 function nextInvoice(){
   const prefix=state.settings.invoicePrefix||"INV";
   let max=0;
@@ -575,7 +580,7 @@ function renderSettings(){
     const el=document.getElementById(id);
     if(el.type==="checkbox")el.checked=!!s[id];else el.value=s[id]??"";
   });
-  document.getElementById("logoPreview").src=s.logoUrl||"";
+  document.getElementById("logoPreview").src=safeUrl(s.logoUrl);
   document.getElementById("logoPreview").classList.toggle("hidden",!s.logoUrl);
   document.getElementById("deliverableManager").innerHTML=s.deliverables.map((d,i)=>
     `<div class="deliverable-row"><input value="${esc(d)}" data-deliverable-index="${i}"><button class="remove" data-remove-deliverable="${i}">×</button></div>`
@@ -657,7 +662,7 @@ function fillForm(q,duplicate=false){
 function populatePdf(q){
   const c=calcQuote(q),s=state.settings;
   document.getElementById("pdfAgency").textContent=s.agencyName;
-  document.getElementById("pdfLogo").src=s.logoUrl||"";
+  document.getElementById("pdfLogo").src=safeUrl(s.logoUrl);
   document.getElementById("pdfLogo").style.display=s.logoUrl?"block":"none";
   document.getElementById("pdfInvoice").textContent=q.invoice;
   document.getElementById("pdfDate").textContent=q.date;
@@ -672,7 +677,7 @@ function populatePdf(q){
   document.getElementById("pdfTax").textContent=`${money(c.tax)} (${s.taxRate}%)`;
   document.getElementById("pdfGrand").textContent=money(c.total);
   document.getElementById("pdfNotes").textContent=q.notes||"";
-  document.getElementById("pdfQr").src=s.upiQrUrl||"";
+  document.getElementById("pdfQr").src=safeUrl(s.upiQrUrl);
   document.getElementById("pdfQr").style.display=s.upiQrUrl?"block":"none";
 }
 async function generatePdf(q){
