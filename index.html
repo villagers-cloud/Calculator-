@@ -2,803 +2,214 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#f5f4ef">
-<title>Automation Pricing Calculator</title>
-
-<script src="https://cdn.jsdelivr.net/npm/html2pdf.js@0.10.1/dist/html2pdf.bundle.min.js"></script>
-
-<style>
-:root{
-  --bg:#f5f4ef;
-  --card:#fffefa;
-  --text:#252a29;
-  --muted:#707875;
-  --line:#e4e4dc;
-  --green:#5d9474;
-  --green-soft:#e1f0e6;
-  --red:#c86e62;
-  --red-soft:#fbe3de;
-  --orange:#d9904c;
-  --orange-soft:#fff0dd;
-  --accent:#547c70;
-  --shadow:0 5px 20px rgba(40,48,44,.07);
-  --radius:18px;
-}
-[data-theme="dark"]{
-  --bg:#1c2220;
-  --card:#252d2a;
-  --text:#f1f4ef;
-  --muted:#aeb9b2;
-  --line:#3b4742;
-  --green:#83bc98;
-  --green-soft:#274235;
-  --red:#ed9688;
-  --red-soft:#4b2926;
-  --orange:#e3a563;
-  --orange-soft:#493824;
-  --accent:#91c2af;
-  --shadow:0 5px 20px rgba(0,0,0,.2);
-}
-*{box-sizing:border-box}
-body{
-  margin:0;background:var(--bg);color:var(--text);
-  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  min-height:100vh;
-}
-button,input,select,textarea{font:inherit}
-button{cursor:pointer}
-.app{max-width:1200px;margin:auto;padding:18px 16px 92px}
-.topbar{
-  display:flex;justify-content:space-between;align-items:center;gap:12px;
-  margin-bottom:18px;position:sticky;top:0;z-index:10;
-  padding:8px 0;background:color-mix(in srgb,var(--bg) 92%,transparent);
-  backdrop-filter:blur(12px)
-}
-.brand{display:flex;align-items:center;gap:11px}
-.brand-mark{
-  width:43px;height:43px;border-radius:14px;background:var(--green);
-  color:white;display:grid;place-items:center;font-size:21px;font-weight:800
-}
-h1,h2,h3,p{margin-top:0}
-h1{font-size:21px;margin-bottom:2px}
-h2{font-size:20px;margin-bottom:15px}
-h3{font-size:16px;margin-bottom:7px}
-.subtitle{color:var(--muted);font-size:12px}
-.top-actions{display:flex;gap:8px}
-.icon-btn,.nav-btn,.btn{
-  border:1px solid var(--line);background:var(--card);color:var(--text);
-  border-radius:12px;padding:10px 13px;font-weight:650;transition:.2s
-}
-.icon-btn{width:42px;height:42px;padding:0;font-size:18px}
-.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
-.btn.green{background:var(--green);border-color:var(--green);color:#fff}
-.btn.danger{background:var(--red);border-color:var(--red);color:#fff}
-.btn.small{font-size:12px;padding:8px 10px}
-.btn:hover,.icon-btn:hover,.nav-btn:hover{transform:translateY(-1px)}
-.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:15px}
-.col-12{grid-column:span 12}.col-8{grid-column:span 8}.col-6{grid-column:span 6}.col-4{grid-column:span 4}
-.card{
-  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
-  padding:18px;box-shadow:var(--shadow)
-}
-.metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-.metric{padding:16px;border-radius:15px;background:var(--green-soft);border:1px solid color-mix(in srgb,var(--green) 20%,transparent)}
-.metric.loss{background:var(--red-soft);border-color:color-mix(in srgb,var(--red) 25%,transparent)}
-.metric.neutral{background:var(--orange-soft);border-color:color-mix(in srgb,var(--orange) 25%,transparent)}
-.metric-label{font-size:12px;color:var(--muted);margin-bottom:6px}
-.metric-value{font-size:24px;font-weight:800}
-label{display:block;font-size:12px;color:var(--muted);font-weight:700;margin:0 0 6px}
-.field{margin-bottom:13px}
-input,select,textarea{
-  width:100%;border:1px solid var(--line);border-radius:11px;
-  padding:11px 12px;background:var(--bg);color:var(--text);outline:none
-}
-textarea{min-height:92px;resize:vertical}
-input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 18%,transparent)}
-.row{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
-.row.three{grid-template-columns:repeat(3,1fr)}
-.toolbar{display:flex;gap:9px;align-items:center;justify-content:space-between;margin-bottom:14px}
-.search{flex:1;max-width:390px}
-.tabs{display:flex;background:var(--bg);border-radius:12px;padding:4px;margin-bottom:16px}
-.tab{flex:1;border:0;background:transparent;color:var(--muted);padding:9px;border-radius:9px;font-weight:750}
-.tab.active{background:var(--card);color:var(--text);box-shadow:var(--shadow)}
-.quote-list{display:grid;gap:12px}
-.quote-card{
-  border:1px solid var(--line);border-radius:15px;padding:15px;
-  background:var(--card);transition:.2s
-}
-.quote-card.actual-loss{border:2px solid var(--red);background:var(--red-soft)}
-.quote-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-.quote-name{font-weight:800;font-size:16px}
-.quote-meta{font-size:12px;color:var(--muted);margin-top:3px}
-.quote-values{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:14px 0}
-.value-box{background:var(--bg);border-radius:10px;padding:9px}
-.value-box span{display:block;color:var(--muted);font-size:10px;margin-bottom:3px}
-.value-box strong{font-size:13px}
-.quote-actions{display:flex;gap:7px;flex-wrap:wrap}
-.section-title{display:flex;align-items:center;justify-content:space-between;margin:18px 0 10px}
-.section-title h3{margin:0}
-.check-list{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
-.check{
-  display:flex;align-items:center;gap:8px;padding:10px;border:1px solid var(--line);
-  border-radius:10px;background:var(--bg);font-size:13px;color:var(--text)
-}
-.check input{width:auto;accent-color:var(--green)}
-.expense{
-  display:grid;grid-template-columns:1.5fr 1fr 1fr auto;gap:8px;
-  align-items:center;margin-bottom:8px
-}
-.switch{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text);white-space:nowrap}
-.switch input{width:auto;accent-color:var(--green)}
-.remove{border:0;background:var(--red-soft);color:var(--red);border-radius:9px;width:35px;height:35px;font-weight:800}
-.profit-meter{height:13px;background:var(--bg);border-radius:20px;overflow:hidden;margin:10px 0}
-.profit-fill{height:100%;background:var(--green);border-radius:20px;transition:.3s}
-.profit-fill.loss{background:var(--red)}
-.profit-line{display:flex;justify-content:space-between;font-size:13px}
-.muted{color:var(--muted)}
-.status-approved,.status-paid{color:var(--green);font-weight:800}
-.status-pending{color:var(--orange);font-weight:800}
-.empty{text-align:center;padding:28px;color:var(--muted)}
-.nav{
-  position:fixed;bottom:0;left:0;right:0;z-index:20;background:var(--card);
-  border-top:1px solid var(--line);display:flex;justify-content:center;gap:6px;padding:9px 10px env(safe-area-inset-bottom)
-}
-.nav-btn{border:0;background:transparent;min-width:95px;color:var(--muted);font-size:12px}
-.nav-btn.active{background:var(--green-soft);color:var(--text)}
-.page{display:none}.page.active{display:block}
-.hidden{display:none!important}
-.danger-zone{border:1px solid var(--red);background:var(--red-soft)}
-.setting-row{display:flex;justify-content:space-between;align-items:center;gap:15px;border-bottom:1px solid var(--line);padding:14px 0}
-.setting-row:last-child{border-bottom:0}
-.setting-title{font-weight:750;font-size:14px}.setting-desc{font-size:12px;color:var(--muted);margin-top:3px}
-.logo-preview{max-width:100px;max-height:55px;object-fit:contain;border-radius:8px;margin-top:8px}
-.deliverable-row{display:flex;gap:8px;margin-bottom:8px}
-.deliverable-row button{flex:0 0 38px}
-.file-label{display:inline-block}
-#lockScreen{
-  position:fixed;inset:0;z-index:100;background:var(--bg);
-  display:none;place-items:center;padding:20px
-}
-.lock-box{width:min(390px,100%);text-align:center}
-.pin-dots{display:flex;justify-content:center;gap:12px;margin:24px 0}
-.pin-dot{width:15px;height:15px;border-radius:50%;background:var(--line)}
-.pin-dot.filled{background:var(--accent)}
-.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.pin-key{height:56px;border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:13px;font-size:19px;font-weight:700}
-.pin-error{color:var(--red);min-height:20px;font-size:12px}
-#pdfTemplate{
-  position:absolute;left:-10000px;top:0;width:794px;padding:42px;
-  background:#fff;color:#222;font-family:Arial,sans-serif
-}
-.pdf-header{display:flex;justify-content:space-between;border-bottom:3px solid #5d9474;padding-bottom:20px;margin-bottom:24px}
-.pdf-logo{max-height:70px;max-width:180px;object-fit:contain}
-.pdf-title{font-size:28px;font-weight:800;color:#416b59}
-.pdf-table{width:100%;border-collapse:collapse;margin-top:20px}
-.pdf-table th,.pdf-table td{border-bottom:1px solid #ddd;padding:11px;text-align:left}
-.pdf-total{margin-left:auto;margin-top:20px;width:300px}
-.pdf-total div{display:flex;justify-content:space-between;padding:6px}
-.pdf-grand{font-size:18px;font-weight:800;border-top:2px solid #5d9474}
-.pdf-qr{max-width:130px;max-height:130px;margin-top:20px}
-@media(max-width:800px){
-  .col-8,.col-6,.col-4{grid-column:span 12}
-}
-@media(max-width:560px){
-  .app{padding-left:12px;padding-right:12px}
-  .metrics{grid-template-columns:1fr}
-  .row,.row.three{grid-template-columns:1fr}
-  .quote-values{grid-template-columns:repeat(2,1fr)}
-  .check-list{grid-template-columns:1fr}
-  .expense{grid-template-columns:1fr 1fr}
-  .expense .switch{grid-column:span 2}
-  .expense .remove{position:absolute;right:8px}
-  .toolbar{align-items:stretch;flex-direction:column}
-  .search{max-width:none}
-  .nav-btn{min-width:0;flex:1;padding-left:4px;padding-right:4px}
-}
-</style>
-</head>
-
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0, viewport-fit=cover">
+<meta name="theme-color" content="#f8fafc">
+<meta name="description" content="Offline Automation Business Manager">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192x192.png">
+<link rel="apple-touch-icon" href="icons/icon-192x192.png">
+<title>Automation Manager</title>
+<link rel="stylesheet" href="css/styles.css">
+<!-- SVG Sprite for Icons -->
+<svg style="display:none;" xmlns="http://www.w3.org/2000/svg">
+  <symbol id="icon-home" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></symbol>
+  <symbol id="icon-users" viewBox="0 0 24 24"><path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/></symbol>
+  <symbol id="icon-briefcase" viewBox="0 0 24 24"><path d="M20 6h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V8c0-1.11-.89-2-2-2zm-6 0h-4V4h4v2z"/></symbol>
+  <symbol id="icon-file-text" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></symbol>
+  <symbol id="icon-settings" viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.56-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .43-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></symbol>
+  <symbol id="icon-plus" viewBox="0 0 24 24"><path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/></symbol>
+  <symbol id="icon-search" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></symbol>
+  <symbol id="icon-lightning" viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></symbol>
+</svg>
+<script>document.addEventListener("DOMContentLoaded", () => { const t = document.getElementById("addTaskTopBtn"); if(t) t.addEventListener("click", () => openTaskForm()); });</script></head>
 <body>
-<div id="lockScreen">
-  <div class="lock-box">
-    <div class="brand-mark" style="margin:auto">⚙</div>
-    <h2 style="margin-top:16px">App Locked</h2>
-    <p class="muted">Enter your 4-digit PIN to continue.</p>
-    <div class="pin-dots" id="pinDots"></div>
-    <div class="pin-error" id="pinError"></div>
-    <div class="pin-pad" id="pinPad"></div>
-  </div>
-</div>
 
-<div class="app" id="app">
+<div class="app-container">
   <header class="topbar">
     <div class="brand">
-      <div class="brand-mark">⚙</div>
+      <div class="brand-icon">
+        <svg><use href="#icon-lightning"></use></svg>
+      </div>
       <div>
-        <h1 id="appTitle">Automation Manager</h1>
-        <div class="subtitle">Pricing, quotes & profit health</div>
+        <h1 style="font-size: 18px; margin: 0;">Automation Manager</h1>
       </div>
     </div>
-    <div class="top-actions">
-      <button class="icon-btn" id="themeBtn" title="Toggle theme">☾</button>
-      <button class="icon-btn" data-page="settings" title="Settings">⚙</button>
+    <div>
+      <button class="btn-icon" id="themeToggleBtn" aria-label="Toggle Theme">☾</button>
     </div>
   </header>
 
-  <main>
-    <section class="page active" id="page-dashboard">
-      <div class="grid">
-        <div class="col-12">
-          <div class="metrics">
-            <div class="metric">
-              <div class="metric-label">Approved/Paid MRR</div>
-              <div class="metric-value" id="mrrValue">₹0</div>
-            </div>
-            <div class="metric neutral">
-              <div class="metric-label">Saved Quotes</div>
-              <div class="metric-value" id="quoteCount">0</div>
-            </div>
-            <div class="metric" id="healthMetric">
-              <div class="metric-label">Expected Profit</div>
-              <div class="metric-value" id="profitValue">₹0</div>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-12 card">
-          <div class="toolbar">
-            <h2 style="margin:0">Saved Quotes</h2>
-            <input class="search" id="searchInput" placeholder="Search by client name…">
-            <button class="btn primary" data-page="quote">+ New Quote</button>
-          </div>
-          <div class="quote-list" id="quoteList"></div>
-        </div>
+  <!-- Dashboard Page -->
+  <main id="page-dashboard" class="page active">
+    <h2>Dashboard</h2>
+    <div class="stats-grid">
+      <div class="stat-card accent">
+        <div class="stat-label">Total Revenue</div>
+        <div class="stat-value" id="dashTotalRev">₹0</div>
       </div>
-    </section>
-
-    <section class="page" id="page-quote">
-      <div class="card">
-        <div class="toolbar">
-          <div>
-            <h2 style="margin-bottom:3px">Quotation Maker</h2>
-            <div class="subtitle" id="formModeText">Simple mode</div>
-          </div>
-          <div class="tabs" style="margin:0;width:220px">
-            <button class="tab active" id="simpleTab">Simple</button>
-            <button class="tab" id="advancedTab">Advanced</button>
-          </div>
-        </div>
-
-        <form id="quoteForm">
-          <input type="hidden" id="editingId">
-          <div class="row">
-            <div class="field">
-              <label>Client Name *</label>
-              <input id="clientName" required placeholder="e.g. Acme Retail">
-            </div>
-            <div class="field">
-              <label>Date *</label>
-              <input type="date" id="quoteDate" required>
-            </div>
-          </div>
-          <div class="row three">
-            <div class="field">
-              <label>Invoice Number</label>
-              <input id="invoiceNumber" readonly>
-            </div>
-            <div class="field">
-              <label>Setup Fee</label>
-              <input type="number" id="setupFee" min="0" step="0.01" value="0">
-            </div>
-            <div class="field">
-              <label>Monthly Retainer</label>
-              <input type="number" id="retainer" min="0" step="0.01" value="0">
-            </div>
-          </div>
-
-          <div class="section-title"><h3>Deliverables</h3></div>
-          <div class="check-list" id="deliverablesList"></div>
-
-          <div class="advanced-only hidden">
-            <div class="section-title">
-              <h3>Extra Expenses</h3>
-              <button type="button" class="btn small" id="addExpense">+ Add Expense</button>
-            </div>
-            <div id="expensesList"></div>
-
-            <div class="section-title"><h3>API Cost Calculator</h3></div>
-            <div class="row">
-              <div class="field">
-                <label>Expected Daily Messages</label>
-                <input type="number" id="dailyMessages" min="0" step="1" value="0">
-              </div>
-              <div class="field">
-                <label>Estimated Monthly API Cost</label>
-                <input id="apiCostDisplay" readonly>
-              </div>
-            </div>
-          </div>
-
-          <div class="section-title"><h3>Profit Health</h3></div>
-          <div class="row">
-            <div class="field">
-              <label>Actual Profit After Month</label>
-              <input type="number" id="actualProfit" min="0" step="0.01" placeholder="Optional">
-            </div>
-            <div class="field">
-              <label>Expected Profit</label>
-              <input id="expectedProfitDisplay" readonly>
-            </div>
-          </div>
-          <div class="profit-meter"><div class="profit-fill" id="profitFill"></div></div>
-          <div class="profit-line">
-            <span id="profitStatus" class="muted">Enter quote values</span>
-            <strong id="profitPercent">0%</strong>
-          </div>
-
-          <div class="section-title"><h3>Notes / Terms & Conditions</h3></div>
-          <textarea id="notes" placeholder="Payment terms, scope notes, validity, exclusions…"></textarea>
-
-          <div class="toolbar" style="margin-top:18px;margin-bottom:0">
-            <button type="button" class="btn" id="resetForm">Clear</button>
-            <div style="display:flex;gap:8px">
-              <button type="button" class="btn" id="pdfBtn">Generate PDF</button>
-              <button type="submit" class="btn green">Save Quote</button>
-            </div>
-          </div>
-        </form>
+      <div class="stat-card">
+        <div class="stat-label">Active Projects</div>
+        <div class="stat-value" id="dashActiveProj">0</div>
       </div>
-    </section>
-
-    <section class="page" id="page-settings">
-      <div class="grid">
-        <div class="col-6 card">
-          <h2>Agency Profile</h2>
-          <div class="field"><label>Agency Name</label><input id="agencyName"></div>
-          <div class="field">
-            <label>Logo URL</label><input id="logoUrl" placeholder="https://…">
-            <img id="logoPreview" class="logo-preview hidden">
-          </div>
-          <div class="field"><label>UPI QR Code Image URL</label><input id="upiQrUrl" placeholder="https://…"></div>
-          <button class="btn green" id="saveProfile">Save Profile</button>
-        </div>
-
-        <div class="col-6 card">
-          <h2>Pricing Defaults</h2>
-          <div class="row">
-            <div class="field"><label>Default Tax %</label><input type="number" id="taxRate" min="0" step=".01"></div>
-            <div class="field"><label>Meta Message Rate</label><input type="number" id="metaRate" min="0" step=".0001"></div>
-          </div>
-          <div class="row">
-            <div class="field">
-              <label>Currency Symbol</label>
-              <select id="currency">
-                <option>₹</option><option>$</option><option>€</option><option>£</option>
-              </select>
-            </div>
-            <div class="field"><label>Invoice Prefix</label><input id="invoicePrefix"></div>
-          </div>
-          <button class="btn green" id="savePricing">Save Pricing</button>
-        </div>
-
-        <div class="col-6 card">
-          <h2>App Preferences</h2>
-          <div class="setting-row">
-            <div><div class="setting-title">Dark Mode</div><div class="setting-desc">Use a low-glare dark interface.</div></div>
-            <input type="checkbox" id="darkMode">
-          </div>
-          <div class="setting-row">
-            <div><div class="setting-title">Require PIN on Open</div><div class="setting-desc">Ask for the PIN every time the app starts.</div></div>
-            <input type="checkbox" id="pinEnabled">
-          </div>
-          <div class="field" style="margin-top:15px"><label>4-Digit App PIN</label><input type="password" id="appPin" inputmode="numeric" maxlength="4" placeholder="Leave blank to keep current"></div>
-          <button class="btn green" id="savePreferences">Save Preferences</button>
-        </div>
-
-        <div class="col-6 card">
-          <h2>Custom Deliverables</h2>
-          <div id="deliverableManager"></div>
-          <div class="deliverable-row">
-            <input id="newDeliverable" placeholder="e.g. WhatsApp Setup">
-            <button class="btn primary" id="addDeliverable">Add</button>
-          </div>
-        </div>
-
-        <div class="col-12 card">
-          <h2>Data Management</h2>
-          <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn" id="exportBtn">Export Data</button>
-            <label class="btn file-label">Import Data<input type="file" id="importFile" accept=".json" hidden></label>
-          </div>
-        </div>
-
-        <div class="col-12 card danger-zone">
-          <h2>Danger Zone</h2>
-          <p class="muted">This permanently removes all quotes and resets the app settings.</p>
-          <button class="btn danger" id="deleteAll">Delete All Data</button>
-        </div>
+      <div class="stat-card">
+        <div class="stat-label">Pending Invoices</div>
+        <div class="stat-value text-danger" id="dashPendingInv">₹0</div>
       </div>
-    </section>
+      <div class="stat-card">
+        <div class="stat-label">Total Clients</div>
+        <div class="stat-value" id="dashTotalClients">0</div>
+      </div>
+    </div>
+
+    <div class="search-bar">
+      <svg><use href="#icon-search"></use></svg>
+      <input type="text" id="globalSearch" placeholder="Search clients, projects, quotes...">
+    </div>
+
+    <h3>Recent Activity</h3>
+    <div id="recentActivityList" class="card">
+       <div class="empty-state">No recent activity.</div>
+    </div>
   </main>
+
+  <!-- Clients Page -->
+  <main id="page-clients" class="page">
+    <div class="flex justify-between items-center mb-4" style="margin-bottom:16px;">
+      <h2>Clients</h2>
+    </div>
+    <div class="search-bar">
+      <svg><use href="#icon-search"></use></svg>
+      <input type="text" id="clientSearch" placeholder="Search clients...">
+    </div>
+    <div id="clientList">
+      <!-- Client Cards generated via JS -->
+    </div>
+  </main>
+
+  <!-- Projects Page -->
+  <main id="page-projects" class="page">
+    <h2>Projects</h2>
+    <div id="projectList">
+       <div class="empty-state">No projects found.</div>
+    </div>
+  </main>
+
+  <!-- Quotes Page -->
+  <main id="page-quotes" class="page">
+    <h2>Quotes & Invoices</h2>
+    <div id="quoteList">
+       <div class="empty-state">No quotes found.</div>
+    </div>
+  </main>
+
+  <!-- Settings Page -->
+  <main id="page-settings" class="page">
+    <h2>Settings</h2>
+    <div class="card">
+      <h3 class="card-title">Business Profile</h3>
+      <div class="form-group">
+        <label>Agency Name</label>
+        <input type="text" id="setAgencyName">
+      </div>
+      <button class="btn btn-primary" id="saveProfileBtn">Save Profile</button>
+    </div>
+
+    <div class="card">
+      <h3 class="card-title">Data Management</h3>
+      <p class="text-sm text-muted">All data is stored locally on this device.</p>
+      <div class="flex gap-2 mt-4" style="flex-wrap: wrap;">
+        <button class="btn" id="exportDataBtn">Export Backup</button>
+        <label class="btn">
+          Import Backup
+          <input type="file" id="importDataBtn" accept=".json" hidden>
+        </label>
+      </div>
+      <button class="btn btn-danger mt-4" id="resetDataBtn" style="width: 100%; margin-top: 16px;">Wipe All Data</button>
+    </div>
+  </main>
+
+  <!-- Tasks Page -->
+  <main id="page-tasks" class="page">
+    <div class="flex justify-between items-center mb-4" style="margin-bottom:16px;">
+      <h2>Tasks</h2>
+      <button class="btn btn-primary" id="addTaskTopBtn" style="padding: 4px 12px; font-size:12px;">+ Add Task</button>
+    </div>
+    <div id="taskList">
+       <div class="empty-state">No tasks found.</div>
+    </div>
+  </main>
+
+  <!-- FAB -->
+  <button class="fab" id="fabQuickAdd" aria-label="Quick Add">
+    <svg><use href="#icon-plus"></use></svg>
+  </button>
+
+  <!-- Quick Action Modal -->
+  <div id="quickActionModal">
+    <div class="modal-content">
+      <div class="flex justify-between items-center">
+        <h3>Quick Add</h3>
+        <button class="btn-icon" id="closeQuickAction" style="border:none;">✕</button>
+      </div>
+      <div class="quick-actions-grid">
+        <button class="quick-action-btn" data-action="new-client">
+          <div class="quick-action-icon"><svg><use href="#icon-users"></use></svg></div>
+          <span>Client</span>
+        </button>
+        <button class="quick-action-btn" data-action="new-project">
+          <div class="quick-action-icon"><svg><use href="#icon-briefcase"></use></svg></div>
+          <span>Project</span>
+        </button>
+        <button class="quick-action-btn" data-action="new-quote">
+          <div class="quick-action-icon"><svg><use href="#icon-file-text"></use></svg></div>
+          <span>Quote</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" data-target="dashboard">
+      <svg><use href="#icon-home"></use></svg>
+      <span>Home</span>
+    </button>
+    <button class="nav-item" data-target="clients">
+      <svg><use href="#icon-users"></use></svg>
+      <span>Clients</span>
+    </button>
+    <button class="nav-item" data-target="projects">
+      <svg><use href="#icon-briefcase"></use></svg>
+      <span>Projects</span>
+    </button>
+    <button class="nav-item" data-target="quotes">
+      <svg><use href="#icon-file-text"></use></svg>
+      <span>Quotes</span>
+    </button>
+     <button class="nav-item" data-target="tasks">
+      <svg><use href="#icon-file-text"></use></svg>
+      <span>Tasks</span>
+    </button>
+    <button class="nav-item" data-target="settings">
+      <svg><use href="#icon-settings"></use></svg>
+      <span>Settings</span>
+    </button>
+  </nav>
+
 </div>
 
-<nav class="nav">
-  <button class="nav-btn active" data-page="dashboard">⌂<br>Dashboard</button>
-  <button class="nav-btn" data-page="quote">＋<br>New Quote</button>
-  <button class="nav-btn" data-page="settings">⚙<br>Settings</button>
-</nav>
-
-<div id="pdfTemplate">
-  <div class="pdf-header">
-    <div>
-      <img id="pdfLogo" class="pdf-logo">
-      <h1 id="pdfAgency" style="margin:8px 0 0;color:#222"></h1>
-    </div>
-    <div style="text-align:right">
-      <div class="pdf-title">INVOICE</div>
-      <div>Invoice: <strong id="pdfInvoice"></strong></div>
-      <div>Date: <span id="pdfDate"></span></div>
-    </div>
-  </div>
-  <h3>Bill To</h3>
-  <div id="pdfClient" style="font-size:18px;margin-bottom:18px"></div>
-  <table class="pdf-table">
-    <thead><tr><th>Description</th><th style="text-align:right">Amount</th></tr></thead>
-    <tbody id="pdfItems"></tbody>
-  </table>
-  <div class="pdf-total">
-    <div><span>Subtotal</span><strong id="pdfSubtotal"></strong></div>
-    <div><span>Tax</span><strong id="pdfTax"></strong></div>
-    <div class="pdf-grand"><span>Grand Total</span><strong id="pdfGrand"></strong></div>
-  </div>
-  <div style="margin-top:32px">
-    <h3>Notes / Terms & Conditions</h3>
-    <div id="pdfNotes" style="white-space:pre-wrap;line-height:1.5"></div>
-  </div>
-  <div style="margin-top:25px">
-    <div>Scan to pay via UPI</div>
-    <img id="pdfQr" class="pdf-qr">
-  </div>
-</div>
-
+<script src="js/db.js"></script>
+<script src="js/html2pdf.bundle.min.js"></script>
+<script src="js/app.js"></script>
 <script>
-"use strict";
-
-const STORAGE_KEY="automation_pricing_app_v1";
-
-const defaultState={
-  settings:{
-    agencyName:"Your Agency",
-    logoUrl:"",
-    upiQrUrl:"",
-    taxRate:18,
-    metaRate:0.85,
-    currency:"₹",
-    invoicePrefix:"INV",
-    deliverables:["WhatsApp Setup","Facebook Ads","Automation Setup"],
-    darkMode:false,
-    pinEnabled:false,
-    pin:""
-  },
-  quotes:[]
-};
-
-let state=loadState();
-let currentMode="simple";
-let pinInput="";
-
-function loadState(){
-  try{
-    const saved=JSON.parse(localStorage.getItem(STORAGE_KEY));
-    return saved?{...defaultState,...saved,settings:{...defaultState.settings,...saved.settings}}:structuredClone(defaultState);
-  }catch(e){return structuredClone(defaultState)}
-}
-function saveState(){localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}
-function money(n){return `${state.settings.currency}${Number(n||0).toLocaleString("en-IN",{minimumFractionDigits:2,maximumFractionDigits:2})}`}
-function today(){return new Date().toISOString().slice(0,10)}
-function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8)}
-function esc(value){return String(value??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
-function nextInvoice(){
-  const prefix=state.settings.invoicePrefix||"INV";
-  let max=0;
-  state.quotes.forEach(q=>{
-    const match=String(q.invoice||"").match(/(d+)$/);
-    if(match)max=Math.max(max,Number(match[1]));
-  });
-  return `${prefix}-${String(max+1).padStart(3,"0")}`;
-}
-function calcQuote(q){
-  const setup=Number(q.setupFee)||0;
-  const retainer=Number(q.retainer)||0;
-  const billable=(q.expenses||[]).filter(e=>e.billToClient).reduce((s,e)=>s+(Number(e.amount)||0),0);
-  const internal=(q.expenses||[]).filter(e=>!e.billToClient).reduce((s,e)=>s+(Number(e.amount)||0),0);
-  const api=(Number(q.dailyMessages)||0)*30*Number(state.settings.metaRate||0);
-  const expected=setup+retainer+billable-api-internal;
-  const subtotal=setup+retainer+billable;
-  const tax=subtotal*Number(state.settings.taxRate||0)/100;
-  return {setup,retainer,billable,internal,api,expected,subtotal,tax,total:subtotal+tax};
-}
-function applyTheme(){
-  document.documentElement.dataset.theme=state.settings.darkMode?"dark":"light";
-  document.getElementById("themeBtn").textContent=state.settings.darkMode?"☀":"☾";
-}
-function showPage(name){
-  document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id==="page-"+name));
-  document.querySelectorAll("[data-page]").forEach(b=>b.classList.toggle("active",b.dataset.page===name));
-  if(name==="dashboard")renderDashboard();
-  if(name==="settings")renderSettings();
-}
-function renderDashboardMetrics(){
-  const mrr=state.quotes.filter(q=>["Approved","Paid"].includes(q.status)).reduce((s,q)=>s+Number(q.retainer||0),0);
-  const totalExpected=state.quotes.reduce((s,q)=>s+calcQuote(q).expected,0);
-  document.getElementById("mrrValue").textContent=money(mrr);
-  document.getElementById("quoteCount").textContent=state.quotes.length;
-  document.getElementById("profitValue").textContent=money(totalExpected);
-  document.getElementById("healthMetric").classList.toggle("loss",totalExpected<0);
-}
-function renderQuoteList(){
-  const query=document.getElementById("searchInput").value.trim().toLowerCase();
-  const list=state.quotes.filter(q=>(q.clientName||"").toLowerCase().includes(query));
-  const container=document.getElementById("quoteList");
-  if(!list.length){container.innerHTML='<div class="empty">No saved quotes found.</div>';return}
-  container.innerHTML=list.map(q=>{
-    const c=calcQuote(q);
-    const loss=q.actualProfit!==""&&q.actualProfit!==null&&Number(q.actualProfit)<c.expected;
-    return `<article class="quote-card ${loss?"actual-loss":""}">
-      <div class="quote-head">
-        <div><div class="quote-name">${esc(q.clientName||"Unnamed Client")}</div>
-        <div class="quote-meta">${esc(q.invoice)} · ${esc(q.date)} · Expected ${money(c.expected)}</div></div>
-        <select class="status-select ${q.status==="Pending"?"status-pending":q.status==="Approved"?"status-approved":"status-paid"}" data-id="${q.id}">
-          ${["Pending","Approved","Paid"].map(s=>`<option ${q.status===s?"selected":""}>${s}</option>`).join("")}
-        </select>
-      </div>
-      <div class="quote-values">
-        <div class="value-box"><span>Setup</span><strong>${money(q.setupFee)}</strong></div>
-        <div class="value-box"><span>Retainer</span><strong>${money(q.retainer)}</strong></div>
-        <div class="value-box"><span>Billable Extras</span><strong>${money(c.billable)}</strong></div>
-        <div class="value-box"><span>Actual Profit</span><strong>${q.actualProfit!==""&&q.actualProfit!=null?money(q.actualProfit):"—"}</strong></div>
-      </div>
-      ${loss?`<div style="color:var(--red);font-size:12px;font-weight:700;margin-bottom:10px">Actual profit is below expected profit.</div>`:""}
-      <div class="quote-actions">
-        <button class="btn small" data-action="edit" data-id="${q.id}">Edit</button>
-        <button class="btn small" data-action="duplicate" data-id="${q.id}">Duplicate</button>
-        <button class="btn small" data-action="pdf" data-id="${q.id}">PDF</button>
-        <button class="btn small danger" data-action="delete" data-id="${q.id}">Delete</button>
-      </div>
-    </article>`
-  }).join("");
-}
-function renderDashboard(){
-  renderDashboardMetrics();
-  renderQuoteList();
-}
-function renderSettings(){
-  const s=state.settings;
- 
-["agencyName","logoUrl","upiQrUrl","taxRate","metaRate","currency","invoicePrefix","darkMode","pinEnabled"].forEach(id=>{
-    const el=document.getElementById(id);
-    if(el.type==="checkbox")el.checked=!!s[id];else el.value=s[id]??"";
-  });
-  document.getElementById("logoPreview").src=s.logoUrl||"";
-  document.getElementById("logoPreview").classList.toggle("hidden",!s.logoUrl);
-  document.getElementById("deliverableManager").innerHTML=s.deliverables.map((d,i)=>
-    `<div class="deliverable-row"><input value="${esc(d)}" data-deliverable-index="${i}"><button class="remove" data-remove-deliverable="${i}">×</button></div>`
-  ).join("");
-}
-function renderDeliverables(selected=[]){
-  document.getElementById("deliverablesList").innerHTML=state.settings.deliverables.map(d=>
-    `<label class="check"><input type="checkbox" value="${esc(d)}" ${selected.includes(d)?"checked":""}>${esc(d)}</label>`
-  ).join("")||'<div class="muted">Add deliverables in Settings.</div>';
-}
-function addExpenseRow(exp={name:"",amount:"",billToClient:true}){
-  const row=document.createElement("div");
-  row.className="expense";
-  row.innerHTML=`<input class="expense-name" placeholder="Expense name" value="${esc(exp.name)}">
-    <input class="expense-amount" type="number" min="0" step=".01" placeholder="Amount" value="${esc(exp.amount)}">
-    <label class="switch"><input class="expense-bill" type="checkbox" ${exp.billToClient?"checked":""}> Bill to Client</label>
-    <button type="button" class="remove">×</button>`;
-  row.querySelector(".remove").onclick=()=>{row.remove();updateFormCalculations()};
-  document.getElementById("expensesList").appendChild(row);
-}
-function getFormQuote(){
-  const expenses=[...document.querySelectorAll(".expense")].map(row=>({
-    name:row.querySelector(".expense-name").value.trim(),
-    amount:Number(row.querySelector(".expense-amount").value)||0,
-    billToClient:row.querySelector(".expense-bill").checked
-  })).filter(e=>e.name||e.amount);
-  return {
-    id:document.getElementById("editingId").value||uid(),
-    invoice:document.getElementById("invoiceNumber").value,
-    clientName:document.getElementById("clientName").value.trim(),
-    date:document.getElementById("quoteDate").value,
-    setupFee:Number(document.getElementById("setupFee").value)||0,
-    retainer:Number(document.getElementById("retainer").value)||0,
-    deliverables:[...document.querySelectorAll("#deliverablesList input:checked")].map(x=>x.value),
-    expenses,
-    dailyMessages:Number(document.getElementById("dailyMessages").value)||0,
-    actualProfit:document.getElementById("actualProfit").value,
-    notes:document.getElementById("notes").value,
-    status:"Pending"
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('./sw.js')
+        .then(registration => console.log('SW registered'))
+        .catch(err => console.error('SW registration failed:', err));
+    });
   }
-}
-function updateFormCalculations(){
-  const q=getFormQuote(), c=calcQuote(q);
-  document.getElementById("apiCostDisplay").value=money(c.api);
-  document.getElementById("expectedProfitDisplay").value=money(c.expected);
-  const actual=q.actualProfit===""?c.expected:Number(q.actualProfit);
-  const percent=c.expected>0?Math.max(0,Math.min(100,actual/c.expected*100)):0;
-  const fill=document.getElementById("profitFill");
-  fill.style.width=percent+"%";fill.classList.toggle("loss",actual<c.expected);
-  document.getElementById("profitPercent").textContent=Math.round(percent)+"%";
-  document.getElementById("profitStatus").textContent=q.actualProfit===""?"Expected profit":"Actual vs expected";
-  document.getElementById("profitStatus").style.color=actual<c.expected?"var(--red)":"var(--green)";
-}
-function resetForm(){
-  document.getElementById("quoteForm").reset();
-  document.getElementById("editingId").value="";
-  document.getElementById("quoteDate").value=today();
-  document.getElementById("invoiceNumber").value=nextInvoice();
-  document.getElementById("expensesList").innerHTML="";
-  renderDeliverables([]);
-  updateFormCalculations();
-}
-function fillForm(q,duplicate=false){
-  showPage("quote");
-  document.getElementById("editingId").value=duplicate?"":q.id;
-  document.getElementById("clientName").value=duplicate?"":q.clientName;
-  document.getElementById("quoteDate").value=duplicate?"":q.date;
-  document.getElementById("invoiceNumber").value=duplicate?nextInvoice():q.invoice;
-  document.getElementById("setupFee").value=q.setupFee;
-  document.getElementById("retainer").value=q.retainer;
-  document.getElementById("dailyMessages").value=q.dailyMessages||0;
-  document.getElementById("actualProfit").value=duplicate?"":(q.actualProfit??"");
-  document.getElementById("notes").value=q.notes||"";
-  renderDeliverables(q.deliverables||[]);
-  document.getElementById("expensesList").innerHTML="";
-  (q.expenses||[]).forEach(addExpenseRow);
-  updateFormCalculations();
-}
-function populatePdf(q){
-  const c=calcQuote(q),s=state.settings;
-  document.getElementById("pdfAgency").textContent=s.agencyName;
-  document.getElementById("pdfLogo").src=s.logoUrl||"";
-  document.getElementById("pdfLogo").style.display=s.logoUrl?"block":"none";
-  document.getElementById("pdfInvoice").textContent=q.invoice;
-  document.getElementById("pdfDate").textContent=q.date;
-  document.getElementById("pdfClient").textContent=q.clientName;
-  const items=[];
-  if(c.setup)items.push(["Setup Fee",c.setup]);
-  if(c.retainer)items.push(["Monthly Retainer",c.retainer]);
-  c.billable&&items.push(["Billable Extra Charges",c.billable]);
-  if(q.deliverables?.length)items.push(["Deliverables: "+q.deliverables.join(", "),"Included"]);
-  document.getElementById("pdfItems").innerHTML=items.map(i=>`<tr><td>${esc(i[0])}</td><td style="text-align:right">${typeof i[1]==="number"?money(i[1]):i[1]}</td></tr>`).join("");
-  document.getElementById("pdfSubtotal").textContent=money(c.subtotal);
-  document.getElementById("pdfTax").textContent=`${money(c.tax)} (${s.taxRate}%)`;
-  document.getElementById("pdfGrand").textContent=money(c.total);
-  document.getElementById("pdfNotes").textContent=q.notes||"";
-  document.getElementById("pdfQr").src=s.upiQrUrl||"";
-  document.getElementById("pdfQr").style.display=s.upiQrUrl?"block":"none";
-}
-async function generatePdf(q){
-  populatePdf(q);
-  if(typeof html2pdf==="undefined"){alert("PDF library is unavailable. Add html2pdf.bundle.min.js locally for offline PDF generation.");return}
-  await html2pdf().set({
-    margin:0,filename:`${q.invoice}-${q.clientName||"invoice"}.pdf`,
-    image:{type:"jpeg",quality:.97},html2canvas:{scale:2,useCORS:true},
-    jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}
-  }).from(document.getElementById("pdfTemplate")).save();
-}
-function setupLock(){
-  const shouldLock=state.settings.pinEnabled&&/^d{4}$/.test(state.settings.pin);
-  document.getElementById("lockScreen").style.display=shouldLock?"grid":"none";
-  if(!shouldLock)return;
-  const dots=document.getElementById("pinDots"),pad=document.getElementById("pinPad");
-  dots.innerHTML=[0,1,2,3].map(i=>`<span class="pin-dot" id="dot${i}"></span>`).join("");
-  pad.innerHTML=[1,2,3,4,5,6,7,8,9,"⌫",0].map(k=>`<button class="pin-key" data-pin="${k}">${k}</button>`).join("");
-  pad.querySelectorAll("[data-pin]").forEach(b=>b.onclick=()=>{
-    const k=b.dataset.pin;
-    if(k==="⌫")pinInput=pinInput.slice(0,-1);else if(pinInput.length<4)pinInput+=k;
-    [0,1,2,3].forEach(i=>document.getElementById("dot"+i).classList.toggle("filled",i<pinInput.length));
-    if(pinInput.length===4){
-      if(pinInput===state.settings.pin){document.getElementById("lockScreen").style.display="none";pinInput=""}
-      else{document.getElementById("pinError").textContent="Incorrect PIN";pinInput="";setTimeout(()=>document.getElementById("pinError").textContent="",900)}
-    }
-  });
-  }
-
-  document.querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
-document.getElementById("themeBtn").onclick=()=>{state.settings.darkMode=!state.settings.darkMode;saveState();applyTheme()};
-// ⚡ Bolt: Bind search directly to renderQuoteList to avoid recalculating global MRR/profit metrics on every keystroke
-document.getElementById("searchInput").oninput=renderQuoteList;
-document.getElementById("simpleTab").onclick=()=>{currentMode="simple";document.getElementById("simpleTab").classList.add("active");document.getElementById("advancedTab").classList.remove("active");document.querySelectorAll(".advanced-only").forEach(x=>x.classList.add("hidden"));document.getElementById("formModeText").textContent="Simple mode"};
-document.getElementById("advancedTab").onclick=()=>{currentMode="advanced";document.getElementById("advancedTab").classList.add("active");document.getElementById("simpleTab").classList.remove("active");document.querySelectorAll(".advanced-only").forEach(x=>x.classList.remove("hidden"));document.getElementById("formModeText").textContent="Advanced mode"};
-document.getElementById("addExpense").onclick=()=>{addExpenseRow();updateFormCalculations()};
-document.getElementById("quoteForm").addEventListener("input",updateFormCalculations);
-document.getElementById("resetForm").onclick=resetForm;
-document.getElementById("quoteForm").onsubmit=e=>{
-  e.preventDefault();
-  const q=getFormQuote();
-  if(!q.clientName||!q.date){alert("Client name and date are required.");return}
-  const index=state.quotes.findIndex(x=>x.id===q.id);
-  if(index>=0){q.status=state.quotes[index].status;state.quotes[index]=q}else state.quotes.unshift(q);
-  saveState();resetForm();showPage("dashboard");
-};
-document.getElementById("pdfBtn").onclick=()=>generatePdf(getFormQuote());
-
-document.getElementById("quoteList").addEventListener("change",e=>{
-  if(!e.target.classList.contains("status-select"))return;
-  const q=state.quotes.find(x=>x.id===e.target.dataset.id);
-  if(q){q.status=e.target.value;saveState();renderDashboard()}
-});
-document.getElementById("quoteList").addEventListener("click",e=>{
-  const btn=e.target.closest("[data-action]");if(!btn)return;
-  const q=state.quotes.find(x=>x.id===btn.dataset.id);if(!q)return;
-  if(btn.dataset.action==="edit")fillForm(q);
-  if(btn.dataset.action==="duplicate")fillForm(q,true);
-  if(btn.dataset.action==="pdf")generatePdf(q);
-  if(btn.dataset.action==="delete"&&confirm(`Delete quote for ${q.clientName}?`)){state.quotes=state.quotes.filter(x=>x.id!==q.id);saveState();renderDashboard()}
-});
-
-document.getElementById("saveProfile").onclick=()=>{
-  ["agencyName","logoUrl","upiQrUrl"].forEach(id=>state.settings[id]=document.getElementById(id).value.trim());
-  saveState();renderSettings();alert("Agency profile saved.");
-};
-document.getElementById("savePricing").onclick=()=>{
-  state.settings.taxRate=Number(document.getElementById("taxRate").value)||0;
-  state.settings.metaRate=Number(document.getElementById("metaRate").value)||0;
-  state.settings.currency=document.getElementById("currency").value;
-  state.settings.invoicePrefix=document.getElementById("invoicePrefix").value.trim()||"INV";
-  saveState();alert("Pricing defaults saved.");
-};
-document.getElementById("savePreferences").onclick=()=>{
-  state.settings.darkMode=document.getElementById("darkMode").checked;
-  state.settings.pinEnabled=document.getElementById("pinEnabled").checked;
-  const pin=document.getElementById("appPin").value.trim();
-  if(pin&&/^d{4}$/.test(pin))state.settings.pin=pin;
-  else if(pin){alert("PIN must contain exactly 4 digits.");return}
-  saveState();applyTheme();setupLock();alert("Preferences saved.");
-};
-document.getElementById("addDeliverable").onclick=()=>{
-  const input=document.getElementById("newDeliverable"),v=input.value.trim();
-  if(v&&!state.settings.deliverables.includes(v)){state.settings.deliverables.push(v);input.value="";saveState();renderSettings();renderDeliverables()}
-};
-document.getElementById("deliverableManager").addEventListener("click",e=>{
-  const i=e.target.dataset.removeDeliverable;
-  if(i!==undefined){state.settings.deliverables.splice(Number(i),1);saveState();renderSettings();renderDeliverables()}
-});
-document.getElementById("deliverableManager").addEventListener("change",e=>{
-  const i=e.target.dataset.deliverableIndex;
-  if(i!==undefined){state.settings.deliverables[Number(i)]=e.target.value.trim();saveState();renderDeliverables()}
-});
-document.getElementById("exportBtn").onclick=()=>{
-  const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"});
-  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`automation-manager-backup-${today()}.json`;a.click();URL.revokeObjectURL(a.href)
-};
-document.getElementById("importFile").onchange=e=>{
-  const file=e.target.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=()=>{
-    try{
-      const imported=JSON.parse(reader.result);
-      if(!imported.settings||!Array.isArray(imported.quotes))throw Error();
-      state={...defaultState,...imported,settings:{...defaultState.settings,...imported.settings}};
-      saveState();applyTheme();renderSettings();renderDashboard();resetForm();alert("Data imported successfully.");
-    }catch(err){alert("Invalid backup file.")}
-  };reader.readAsText(file)
-};
-document.getElementById("deleteAll").onclick=()=>{
-  if(confirm("Delete every quote and reset all app data? This cannot be undone.")){
-    localStorage.removeItem(STORAGE_KEY);state=structuredClone(defaultState);saveState();applyTheme();renderSettings();resetForm();renderDashboard();
-  }
-};
-
-applyTheme();
-renderDeliverables([]);
-renderDashboard();
-renderSettings();
-resetForm();
-setupLock();
 </script>
 </body>
 </html>
+<!-- Wait, I already appended it, but I need to make sure the Bottom Nav has Tasks -->
