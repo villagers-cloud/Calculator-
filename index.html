@@ -685,7 +685,7 @@ async function generatePdf(q){
   }).from(document.getElementById("pdfTemplate")).save();
 }
 function setupLock(){
-  const shouldLock=state.settings.pinEnabled&&/^d{4}$/.test(state.settings.pin);
+  const shouldLock=state.settings.pinEnabled&&/^\d{4}$/.test(state.settings.pin);
   document.getElementById("lockScreen").style.display=shouldLock?"grid":"none";
   if(!shouldLock)return;
   const dots=document.getElementById("pinDots"),pad=document.getElementById("pinPad");
@@ -749,7 +749,7 @@ document.getElementById("savePreferences").onclick=()=>{
   state.settings.darkMode=document.getElementById("darkMode").checked;
   state.settings.pinEnabled=document.getElementById("pinEnabled").checked;
   const pin=document.getElementById("appPin").value.trim();
-  if(pin&&/^d{4}$/.test(pin))state.settings.pin=pin;
+  if(pin&&/^\d{4}$/.test(pin))state.settings.pin=pin;
   else if(pin){alert("PIN must contain exactly 4 digits.");return}
   saveState();applyTheme();setupLock();alert("Preferences saved.");
 };
