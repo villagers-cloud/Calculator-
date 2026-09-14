@@ -519,6 +519,16 @@ function calcQuote(q){
   const tax=subtotal*Number(state.settings.taxRate||0)/100;
   return {setup,retainer,billable,internal,api,expected,subtotal,tax,total:subtotal+tax};
 }
+
+// ⚡ Bolt Performance Optimization: Debounce function to prevent unnecessary rapid executions
+function debounce(func, wait) {
+  let timeout;
+  return function(...args) {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func.apply(this, args), wait);
+  };
+}
+
 function applyTheme(){
   document.documentElement.dataset.theme=state.settings.darkMode?"dark":"light";
   document.getElementById("themeBtn").textContent=state.settings.darkMode?"☀":"☾";
@@ -704,7 +714,8 @@ function setupLock(){
 
   document.querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
 document.getElementById("themeBtn").onclick=()=>{state.settings.darkMode=!state.settings.darkMode;saveState();applyTheme()};
-document.getElementById("searchInput").oninput=renderDashboard;
+// ⚡ Bolt Performance Optimization: Debounce search input to prevent unnecessary DOM updates and metric recalculations on every keystroke
+document.getElementById("searchInput").oninput=debounce(renderDashboard, 300);
 document.getElementById("simpleTab").onclick=()=>{currentMode="simple";document.getElementById("simpleTab").classList.add("active");document.getElementById("advancedTab").classList.remove("active");document.querySelectorAll(".advanced-only").forEach(x=>x.classList.add("hidden"));document.getElementById("formModeText").textContent="Simple mode"};
 document.getElementById("advancedTab").onclick=()=>{currentMode="advanced";document.getElementById("advancedTab").classList.add("active");document.getElementById("simpleTab").classList.remove("active");document.querySelectorAll(".advanced-only").forEach(x=>x.classList.remove("hidden"));document.getElementById("formModeText").textContent="Advanced mode"};
 document.getElementById("addExpense").onclick=()=>{addExpenseRow();updateFormCalculations()};

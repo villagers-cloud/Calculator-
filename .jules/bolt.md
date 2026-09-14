@@ -1,0 +1,3 @@
+## 2024-05-24 - Debouncing Global Render Functions
+**Learning:** In simple architecture applications where filtering or searching directly triggers a global re-render function (like `renderDashboard` that recalculates metrics and redraws the entire list), it can be expensive.
+**Action:** Always apply debouncing to search inputs that trigger DOM updates and recalculations, especially when the search input is part of a larger render function that isn't isolated from other expensive operations like calculating overall profit or MRR.
