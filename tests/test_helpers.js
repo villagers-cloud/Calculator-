@@ -84,3 +84,180 @@ function runTests() {
 }
 
 runTests();
+
+// ---------------------------------------------------------
+// Tests for filterDataByDate
+// ---------------------------------------------------------
+console.log('\nRunning tests for filterDataByDate...\n');
+
+// Expose functions and properties for testing
+const filterDataByDate = sandbox.filterDataByDate;
+// Initialize AppFilter on windowMock if it doesn't exist
+if (!windowMock.AppFilter) {
+    windowMock.AppFilter = {
+        active: false,
+        fromDate: '',
+        toDate: '',
+        fromTime: '',
+        toTime: ''
+    };
+}
+const AppFilter = windowMock.AppFilter;
+// add isNaN to sandbox
+sandbox.isNaN = isNaN;
+
+let fdPassed = 0;
+let fdFailed = 0;
+
+function resetAppFilter() {
+    AppFilter.active = false;
+    AppFilter.fromDate = '';
+    AppFilter.toDate = '';
+    AppFilter.fromTime = '';
+    AppFilter.toTime = '';
+}
+
+function runFdTest(name, testFn) {
+    try {
+        resetAppFilter();
+        testFn();
+        console.log(`✅ PASS: ${name}`);
+        fdPassed++;
+    } catch (error) {
+        console.error(`❌ FAIL: ${name}`);
+        console.error(error.message);
+        fdFailed++;
+    }
+}
+
+const testData = [
+    { id: 1, date: '2023-10-01T10:00:00' },
+    { id: 2, date: '2023-10-05T15:30:00' },
+    { id: 3, date: '2023-10-10T08:15:00' },
+    { id: 4, date: '2023-10-15T20:45:00' },
+    { id: 5, date: '2023-10-20T12:00:00' },
+];
+
+runFdTest('Empty/no filter returns all data', () => {
+    AppFilter.active = false;
+    const result = filterDataByDate(testData);
+    assert.strictEqual(result.length, testData.length);
+});
+
+runFdTest('From date only filtering', () => {
+    AppFilter.active = true;
+    AppFilter.fromDate = '2023-10-10'; // Midnight
+    const result = filterDataByDate(testData);
+    assert.deepStrictEqual(result.map(d => d.id), [3, 4, 5]);
+});
+
+runFdTest('To date only filtering', () => {
+    AppFilter.active = true;
+    AppFilter.toDate = '2023-10-10'; // 23:59:59
+    const result = filterDataByDate(testData);
+    assert.deepStrictEqual(result.map(d => d.id), [1, 2, 3]);
+});
+
+runFdTest('From + To date range filtering', () => {
+    AppFilter.active = true;
+    AppFilter.fromDate = '2023-10-05';
+    AppFilter.toDate = '2023-10-15';
+    const result = filterDataByDate(testData);
+    assert.deepStrictEqual(result.map(d => d.id), [2, 3, 4]);
+});
+
+runFdTest('Exact boundary dates (matching exact from/to midnight and 23:59:59)', () => {
+    AppFilter.active = true;
+    AppFilter.fromDate = '2023-10-05'; // '2023-10-05T00:00:00'
+    AppFilter.toDate = '2023-10-05';   // '2023-10-05T23:59:59'
+    const result = filterDataByDate(testData);
+    assert.deepStrictEqual(result.map(d => d.id), [2]); // 2023-10-05T15:30:00
+});
+
+runFdTest('Time filtering', () => {
+    AppFilter.active = true;
+    AppFilter.fromDate = '2023-10-10';
+    AppFilter.fromTime = '09:00:00';
+    AppFilter.toDate = '2023-10-10';
+    AppFilter.toTime = '12:00:00';
+
+    const timeData = [
+        { id: 1, date: '2023-10-10T08:30:00' }, // Before
+        { id: 2, date: '2023-10-10T10:00:00' }, // Inside
+        { id: 3, date: '2023-10-10T13:00:00' }, // After
+    ];
+    const result = filterDataByDate(timeData);
+    assert.deepStrictEqual(result.map(d => d.id), [2]);
+});
+
+runFdTest('Empty dataset', () => {
+    AppFilter.active = true;
+    AppFilter.fromDate = '2023-10-01';
+    const result = filterDataByDate([]);
+    assert.deepStrictEqual(result, []);
+});
+
+runFdTest('Missing/null/undefined date fields fallback to created or return true', () => {
+    AppFilter.active = true;
+    AppFilter.fromDate = '2023-10-10';
+    AppFilter.toDate = '2023-10-20';
+
+    const weirdData = [
+        { id: 1 }, // No date or created -> returns true
+        { id: 2, date: null, created: '2023-10-15T00:00:00' }, // Uses created, inside
+        { id: 3, date: undefined, created: '2023-10-05T00:00:00' }, // Uses created, outside
+        { id: 4, date: '', created: '' } // Fallback to true
+    ];
+
+    const result = filterDataByDate(weirdData);
+    assert.deepStrictEqual(result.map(d => d.id), [1, 2, 4]);
+});
+
+runFdTest('Invalid date values/formats return true', () => {
+    AppFilter.active = true;
+    AppFilter.fromDate = '2023-10-10';
+    AppFilter.toDate = '2023-10-20';
+
+    const invalidDates = [
+        { id: 1, date: 'invalid-date' },
+        { id: 2, date: '2023-13-45' }
+    ];
+
+    const result = filterDataByDate(invalidDates);
+    assert.deepStrictEqual(result.map(d => d.id), [1, 2]);
+});
+
+runFdTest('Records with the same boundary date/time', () => {
+    AppFilter.active = true;
+    AppFilter.fromDate = '2023-10-10';
+    AppFilter.fromTime = '10:00:00';
+    AppFilter.toDate = '2023-10-10';
+    AppFilter.toTime = '10:00:00';
+
+    const exactData = [
+        { id: 1, date: '2023-10-10T10:00:00' }, // Exact match
+        { id: 2, date: '2023-10-10T09:59:59' }, // Before
+        { id: 3, date: '2023-10-10T10:00:01' }  // After
+    ];
+
+    const result = filterDataByDate(exactData);
+    assert.deepStrictEqual(result.map(d => d.id), [1]);
+});
+
+runFdTest('Different custom dateField', () => {
+    AppFilter.active = true;
+    AppFilter.fromDate = '2023-10-10';
+
+    const customData = [
+        { id: 1, invoiceDate: '2023-10-05T00:00:00' }, // Before
+        { id: 2, invoiceDate: '2023-10-15T00:00:00' }, // After
+    ];
+
+    const result = filterDataByDate(customData, 'invoiceDate');
+    assert.deepStrictEqual(result.map(d => d.id), [2]);
+});
+
+console.log(`\nTest Summary filterDataByDate: ${fdPassed} passed, ${fdFailed} failed`);
+if (fdFailed > 0) {
+    process.exit(1);
+}
