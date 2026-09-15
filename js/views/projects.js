@@ -22,11 +22,12 @@ window.appRouter.addRoute('projects', async () => {
 
     let projects = await window.appDB.getAll('projects');
 
-    // Resolve client names
+    // Resolve client names (optimized: avoid N+1 queries)
+    const clients = await window.appDB.getAll('clients');
+    const clientMap = new Map(clients.map(c => [c.id, c.name]));
     for (let p of projects) {
-        if (p.clientId) {
-            const client = await window.appDB.get('clients', p.clientId);
-            if (client) p.clientNameTemp = client.name;
+        if (p.clientId && clientMap.has(p.clientId)) {
+            p.clientNameTemp = clientMap.get(p.clientId);
         }
     }
 
