@@ -58,7 +58,7 @@ window.AppState = {
                 aiApiKeyOpenAI: "",
                 aiModelOpenAI: "gpt-4o-mini",
                 aiApiKeyGemini: "",
-                aiModelGemini: "gemini-1.5-flash"
+                aiModelGemini: "gemini-3.8-flash"
             };
             await window.appDB.put('settings', this.settings);
         }
