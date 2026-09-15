@@ -335,7 +335,7 @@ window.appRouter.addRoute('tasks', async () => {
         const list = document.getElementById('globalTaskList');
 
         if (filtered.length === 0) {
-            list.innerHTML = `<div class="empty">No ${currentFilter} tasks.</div>`;
+            list.innerHTML = `<div class="empty">No ${escapeHTML(currentFilter)} tasks.</div>`;
             return;
         }
 
