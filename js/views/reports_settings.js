@@ -253,9 +253,10 @@ window.appRouter.addRoute('data', async () => {
     document.getElementById('exportJsonBtn').onclick = async () => {
         const stores = ['settings', 'clients', 'services', 'quotes', 'projects', 'tasks', 'invoices', 'payments', 'expenses', 'team', 'notes'];
         const dump = {};
-        for (const store of stores) {
+
+        await Promise.all(stores.map(async (store) => {
             dump[store] = await window.appDB.getAll(store);
-        }
+        }));
 
         const blob = new Blob([JSON.stringify(dump, null, 2)], { type: "application/json" });
         const filename = `AutomationManager_Backup_${getTodayDate()}.json`;
