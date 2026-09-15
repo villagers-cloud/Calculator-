@@ -21,6 +21,7 @@ window.appRouter.addRoute('dashboard', async () => {
         <div class="col-12 card">
           <div class="toolbar">
             <h2 style="margin:0">Recent Quotes</h2>
+            <button class="icon-btn global-filter-btn" title="Filter by Date">📅</button>
             <button class="btn primary" data-navigate="quotes">+ New Quote</button>
           </div>
           <div id="dashRecentQuotes">Loading...</div>
@@ -29,7 +30,8 @@ window.appRouter.addRoute('dashboard', async () => {
     `;
 
     // Fetch dashboard data
-    const quotes = await window.appDB.getAll('quotes');
+    let quotes = await window.appDB.getAll('quotes');
+    quotes = filterDataByDate(quotes, 'date');
 
     let mrr = 0;
     let expectedProfit = 0;

@@ -12,6 +12,7 @@ window.appRouter.addRoute('projects', async () => {
         <div class="card">
             <div class="toolbar">
                 <h2 style="margin:0">Projects</h2>
+            <button class="icon-btn global-filter-btn" title="Filter by Date">📅</button>
                 <input class="search" id="projectSearch" placeholder="Search projects...">
                 <button class="btn primary" id="newProjectBtn">+ New Project</button>
             </div>
@@ -99,6 +100,7 @@ async function showProjectForm(project = null) {
         <div class="card">
             <div class="toolbar">
                 <h2 style="margin:0">${isEdit ? 'Edit Project' : 'New Project'}</h2>
+            <button class="icon-btn global-filter-btn" title="Filter by Date">📅</button>
                 <button class="btn" id="cancelProjectBtn">Cancel</button>
             </div>
             <form id="projectForm">
@@ -305,6 +307,7 @@ window.appRouter.addRoute('tasks', async () => {
         <div class="card">
             <div class="toolbar">
                 <h2 style="margin:0">My Tasks</h2>
+            <button class="icon-btn global-filter-btn" title="Filter by Date">📅</button>
                 <button class="btn primary" id="globalNewTaskBtn">+ New Task</button>
             </div>
 
@@ -318,7 +321,8 @@ window.appRouter.addRoute('tasks', async () => {
     `;
 
     const tasks = await window.appDB.getAll('tasks');
-    const projects = await window.appDB.getAll('projects');
+    let projects = await window.appDB.getAll('projects');
+    projects = filterDataByDate(projects, 'startDate');
 
     // Pre-map project names
     const projMap = {};
@@ -414,6 +418,7 @@ function showTaskForm(task, projects) {
         <div class="card">
             <div class="toolbar">
                 <h2 style="margin:0">${isEdit ? 'Edit Task' : 'New Task'}</h2>
+            <button class="icon-btn global-filter-btn" title="Filter by Date">📅</button>
                 <button class="btn" id="cancelTaskBtn">Cancel</button>
             </div>
             <form id="taskForm">

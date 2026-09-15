@@ -170,3 +170,17 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 
   .search{max-width:none}
   .nav-btn{padding-left:0;padding-right:0}
 }
+
+.global-filter-btn {
+    position: relative;
+}
+.global-filter-btn.active-filter::after {
+    content: '';
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 8px;
+    height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+}

@@ -5,6 +5,7 @@ window.appRouter.addRoute('services', async () => {
         <div class="card">
             <div class="toolbar">
                 <h2 style="margin:0">Service Catalog</h2>
+            <button class="icon-btn global-filter-btn" title="Filter by Date">📅</button>
                 <button class="btn primary" id="newServiceBtn">+ New Service</button>
             </div>
             <div id="serviceList">Loading...</div>
@@ -69,6 +70,7 @@ function showServiceForm(service = null) {
         <div class="card">
             <div class="toolbar">
                 <h2 style="margin:0">${isEdit ? 'Edit Service' : 'New Service'}</h2>
+            <button class="icon-btn global-filter-btn" title="Filter by Date">📅</button>
                 <button class="btn" id="cancelServiceBtn">Cancel</button>
             </div>
             <form id="serviceForm">

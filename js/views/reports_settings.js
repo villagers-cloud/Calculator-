@@ -5,6 +5,7 @@ window.appRouter.addRoute('reports', async () => {
         <div class="card">
             <div class="toolbar">
                 <h2 style="margin:0">Business Reports</h2>
+            <button class="icon-btn global-filter-btn" title="Filter by Date">📅</button>
             </div>
 
             <div class="grid">
@@ -205,6 +206,7 @@ window.appRouter.addRoute('settings', async () => {
             renderDeliverables();
         }
     });
+    if(window.renderAiConnector) window.renderAiConnector();
 });
 
 window.appRouter.addRoute('data', async () => {
@@ -239,7 +241,7 @@ window.appRouter.addRoute('data', async () => {
                 <button class="btn small" data-csv="payments">Payments</button>
             </div>
 
-            <div class="danger-zone" style="margin-top:40px; padding:20px; border-radius:12px">
+            <div class="danger-zone" style="margin-top:40px; padding:20px; border-radius:12px; background:var(--red-soft);">
                 <h3 style="margin:0; color:var(--red)">Danger Zone</h3>
                 <p style="font-size:12px; color:var(--red)">Permanently delete all data and reset the application.</p>
                 <button class="btn danger" id="resetAppBtn">Factory Reset App</button>
@@ -256,12 +258,8 @@ window.appRouter.addRoute('data', async () => {
         }
 
         const blob = new Blob([JSON.stringify(dump, null, 2)], { type: "application/json" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `automation-manager-backup-${getTodayDate()}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
+        const filename = `AutomationManager_Backup_${getTodayDate()}.json`;
+        await saveFileToDevice(blob, filename);
     };
 
     document.getElementById('importJsonFile').onchange = (e) => {
@@ -273,7 +271,7 @@ window.appRouter.addRoute('data', async () => {
                 const data = JSON.parse(reader.result);
                 if (!data.settings || !data.clients) throw new Error("Invalid structure");
 
-                if (confirm("This will overwrite existing data. Are you sure?")) {
+                if (confirm("This will overwrite ALL existing data. Are you sure?")) {
                     const stores = ['settings', 'clients', 'services', 'quotes', 'projects', 'tasks', 'invoices', 'payments', 'expenses', 'team', 'notes'];
                     for (const store of stores) {
                         if (data[store]) {
@@ -317,14 +315,10 @@ window.appRouter.addRoute('data', async () => {
             }
 
             const blob = new Blob([csvRows.join('\n')], { type: "text/csv" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `automation_${type}_${getTodayDate()}.csv`;
-            a.click();
-            URL.revokeObjectURL(url);
+            const filename = `Automation_${type}_${getTodayDate()}.csv`;
+            await saveFileToDevice(blob, filename);
         }
-    });
+    };
 
     // Reset App
     document.getElementById('resetAppBtn').onclick = async () => {
@@ -340,3 +334,163 @@ window.appRouter.addRoute('data', async () => {
         }
     };
 });
+
+// AI Connector Setup Logic
+window.renderAiConnector = () => {
+    const container = document.getElementById('settings-ai-container');
+    if (!container) return;
+
+    container.innerHTML = `
+        <h2>AI & Integrations</h2>
+        <div class="subtitle" style="margin-bottom:15px">Configure AI models to connect your Automation Manager.</div>
+
+        <div class="field">
+            <label>AI Provider</label>
+            <select id="set-aiProvider">
+                <option value="openai">OpenAI (ChatGPT)</option>
+                <option value="gemini">Google Gemini</option>
+            </select>
+        </div>
+
+        <div id="ai-openai-fields" style="display:none">
+            <div class="field">
+                <label>OpenAI API Key</label>
+                <input type="password" id="set-aiApiKeyOpenAI" placeholder="sk-...">
+            </div>
+            <div class="field">
+                <label>OpenAI Model</label>
+                <input id="set-aiModelOpenAI" placeholder="gpt-4o-mini" value="gpt-4o-mini">
+            </div>
+        </div>
+
+        <div id="ai-gemini-fields" style="display:none">
+            <div class="field">
+                <label>Gemini API Key</label>
+                <input type="password" id="set-aiApiKeyGemini" placeholder="AIza...">
+            </div>
+            <div class="field">
+                <label>Gemini Model</label>
+                <input id="set-aiModelGemini" placeholder="gemini-1.5-flash" value="gemini-1.5-flash">
+            </div>
+        </div>
+
+        <div style="display:flex; gap:10px; margin-top:15px;">
+            <button class="btn primary" id="saveAiBtn">Save Credentials</button>
+            <button class="btn" id="testAiBtn">Test Connection</button>
+        </div>
+
+        <div id="aiTestResult" style="margin-top:15px; font-weight:bold; font-size:14px; padding: 10px; border-radius: 8px; display: none;"></div>
+    `;
+
+    const s = window.AppState.settings;
+
+    // Bind initial values
+    document.getElementById('set-aiProvider').value = s.aiProvider || 'openai';
+    document.getElementById('set-aiApiKeyOpenAI').value = s.aiApiKeyOpenAI || '';
+    document.getElementById('set-aiModelOpenAI').value = s.aiModelOpenAI || 'gpt-4o-mini';
+    document.getElementById('set-aiApiKeyGemini').value = s.aiApiKeyGemini || '';
+    document.getElementById('set-aiModelGemini').value = s.aiModelGemini || 'gemini-1.5-flash';
+
+    const toggleFields = () => {
+        const prov = document.getElementById('set-aiProvider').value;
+        document.getElementById('ai-openai-fields').style.display = prov === 'openai' ? 'block' : 'none';
+        document.getElementById('ai-gemini-fields').style.display = prov === 'gemini' ? 'block' : 'none';
+    };
+    toggleFields();
+
+    document.getElementById('set-aiProvider').addEventListener('change', toggleFields);
+
+    document.getElementById('saveAiBtn').onclick = async () => {
+        s.aiProvider = document.getElementById('set-aiProvider').value;
+        s.aiApiKeyOpenAI = document.getElementById('set-aiApiKeyOpenAI').value.trim();
+        s.aiModelOpenAI = document.getElementById('set-aiModelOpenAI').value.trim() || 'gpt-4o-mini';
+        s.aiApiKeyGemini = document.getElementById('set-aiApiKeyGemini').value.trim();
+        s.aiModelGemini = document.getElementById('set-aiModelGemini').value.trim() || 'gemini-1.5-flash';
+
+        await window.AppState.saveSettings();
+        alert("AI Credentials saved.");
+    };
+
+    document.getElementById('testAiBtn').onclick = async () => {
+        const prov = document.getElementById('set-aiProvider').value;
+        const resEl = document.getElementById('aiTestResult');
+        resEl.style.display = 'block';
+        resEl.textContent = 'Testing connection...';
+        resEl.style.backgroundColor = 'var(--bg)';
+        resEl.style.color = 'var(--text)';
+
+        const startTime = Date.now();
+
+        try {
+            if (prov === 'openai') {
+                const key = document.getElementById('set-aiApiKeyOpenAI').value.trim();
+                const model = document.getElementById('set-aiModelOpenAI').value.trim() || 'gpt-4o-mini';
+                if (!key) throw new Error("Please enter an OpenAI API key first.");
+
+                const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${key}`
+                    },
+                    body: JSON.stringify({
+                        model: model,
+                        messages: [{ role: 'user', content: 'Reply with exactly: Connection successful.' }],
+                        max_tokens: 10
+                    })
+                });
+
+                if (!response.ok) {
+                    const errBody = await response.json().catch(()=>({}));
+                    throw new Error(`OpenAI Error: ${response.status} ${errBody.error?.message || response.statusText}`);
+                }
+
+                const data = await response.json();
+                const msg = data.choices?.[0]?.message?.content?.trim();
+                if (msg) {
+                    const elapsed = Date.now() - startTime;
+                    resEl.textContent = `✅ Connected. Response: "${msg}" (${elapsed}ms)`;
+                    resEl.style.backgroundColor = 'var(--green-soft)';
+                    resEl.style.color = 'var(--green)';
+                } else {
+                    throw new Error("Invalid response format from OpenAI.");
+                }
+
+            } else if (prov === 'gemini') {
+                const key = document.getElementById('set-aiApiKeyGemini').value.trim();
+                const model = document.getElementById('set-aiModelGemini').value.trim() || 'gemini-1.5-flash';
+                if (!key) throw new Error("Please enter a Gemini API key first.");
+
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: 'Reply with exactly: Connection successful.' }] }]
+                    })
+                });
+
+                if (!response.ok) {
+                    const errBody = await response.json().catch(()=>({}));
+                    throw new Error(`Gemini Error: ${response.status} ${errBody.error?.message || response.statusText}`);
+                }
+
+                const data = await response.json();
+                const msg = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+                if (msg) {
+                    const elapsed = Date.now() - startTime;
+                    resEl.textContent = `✅ Connected. Response: "${msg}" (${elapsed}ms)`;
+                    resEl.style.backgroundColor = 'var(--green-soft)';
+                    resEl.style.color = 'var(--green)';
+                } else {
+                    throw new Error("Invalid response format from Gemini.");
+                }
+            }
+        } catch (err) {
+            const elapsed = Date.now() - startTime;
+            resEl.textContent = `❌ Connection failed: ${err.message} (${elapsed}ms)`;
+            resEl.style.backgroundColor = 'var(--red-soft)';
+            resEl.style.color = 'var(--red)';
+        }
+    };
+};

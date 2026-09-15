@@ -5,6 +5,7 @@ window.appRouter.addRoute('invoices', async () => {
         <div class="card">
             <div class="toolbar">
                 <h2 style="margin:0">Invoices</h2>
+            <button class="icon-btn global-filter-btn" title="Filter by Date">📅</button>
                 <button class="btn primary" id="newInvBtn">+ New Invoice</button>
             </div>
             <div id="invList">Loading...</div>
@@ -12,6 +13,7 @@ window.appRouter.addRoute('invoices', async () => {
     `;
 
     let invoices = await window.appDB.getAll('invoices');
+    invoices = filterDataByDate(invoices, 'date');
     let payments = await window.appDB.getAll('payments');
     const clients = await window.appDB.getAll('clients');
     const clientMap = {};
@@ -80,18 +82,31 @@ window.appRouter.addRoute('invoices', async () => {
 });
 
 function showInvoiceForm(clients) {
+    const s = window.AppState.settings;
+    const nPrefix = s.invoicePrefix || "INV";
+    const defaultNotes = s.defaultTerms ? s.defaultTerms + (s.footerText ? '\n\n' + s.footerText : '') : '';
+
+    // Default due date logic based on validity
+    let defaultDueDate = "";
+    if (s.defaultQuoteValidity) {
+        const d = new Date();
+        d.setDate(d.getDate() + Number(s.defaultQuoteValidity));
+        defaultDueDate = d.toISOString().split('T')[0];
+    }
+
     const container = document.getElementById('page-invoices');
     container.innerHTML = `
         <div class="card">
             <div class="toolbar">
                 <h2 style="margin:0">New Invoice</h2>
+            <button class="icon-btn global-filter-btn" title="Filter by Date">📅</button>
                 <button class="btn" id="cancelInvBtn">Cancel</button>
             </div>
             <form id="invForm">
                 <div class="row">
                     <div class="field">
                         <label>Invoice Number *</label>
-                        <input id="if-num" required placeholder="e.g. INV-100">
+                        <input id="if-num" required value="${nPrefix}-${Date.now().toString().slice(-4)}">
                     </div>
                     <div class="field">
                         <label>Date *</label>
@@ -112,12 +127,12 @@ function showInvoiceForm(clients) {
                     </div>
                     <div class="field">
                         <label>Due Date</label>
-                        <input type="date" id="if-due">
+                        <input type="date" id="if-due" value="${defaultDueDate}">
                     </div>
                 </div>
                 <div class="field">
                     <label>Notes / Items description</label>
-                    <textarea id="if-notes"></textarea>
+                    <textarea id="if-notes" style="min-height: 120px;">${escapeHTML(defaultNotes)}</textarea>
                 </div>
                 <div style="margin-top:15px">
                     <button type="submit" class="btn green">Save Invoice</button>
@@ -150,6 +165,7 @@ window.appRouter.addRoute('payments', async () => {
         <div class="card">
             <div class="toolbar">
                 <h2 style="margin:0">Payments</h2>
+            <button class="icon-btn global-filter-btn" title="Filter by Date">📅</button>
                 <button class="btn primary" id="newPayBtn">+ Record Payment</button>
             </div>
             <div id="payList">Loading...</div>
@@ -157,7 +173,9 @@ window.appRouter.addRoute('payments', async () => {
     `;
 
     let payments = await window.appDB.getAll('payments');
-    const invoices = await window.appDB.getAll('invoices');
+    payments = filterDataByDate(payments, 'date');
+    let invoices = await window.appDB.getAll('invoices');
+    invoices = filterDataByDate(invoices, 'date');
     const clients = await window.appDB.getAll('clients');
 
     const clientMap = {};
@@ -210,6 +228,7 @@ function showPaymentForm(prefillInvId = null, invoices, clientMap) {
         <div class="card">
             <div class="toolbar">
                 <h2 style="margin:0">Record Payment</h2>
+            <button class="icon-btn global-filter-btn" title="Filter by Date">📅</button>
                 <button class="btn" id="cancelPayBtn">Cancel</button>
             </div>
             <form id="payForm">
@@ -275,6 +294,7 @@ window.appRouter.addRoute('expenses', async () => {
         <div class="card">
             <div class="toolbar">
                 <h2 style="margin:0">Expenses</h2>
+            <button class="icon-btn global-filter-btn" title="Filter by Date">📅</button>
                 <button class="btn primary" id="newExpBtn">+ Add Expense</button>
             </div>
             <div id="expList">Loading...</div>
@@ -282,6 +302,7 @@ window.appRouter.addRoute('expenses', async () => {
     `;
 
     let expenses = await window.appDB.getAll('expenses');
+    expenses = filterDataByDate(expenses, 'date');
 
     const renderExpenses = () => {
         const list = document.getElementById('expList');
@@ -329,6 +350,7 @@ function showExpenseForm() {
         <div class="card">
             <div class="toolbar">
                 <h2 style="margin:0">Add Expense</h2>
+            <button class="icon-btn global-filter-btn" title="Filter by Date">📅</button>
                 <button class="btn" id="cancelExpBtn">Cancel</button>
             </div>
             <form id="expForm">

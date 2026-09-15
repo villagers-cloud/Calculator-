@@ -5,6 +5,7 @@ window.appRouter.addRoute('quotes', async () => {
         <div class="card">
             <div class="toolbar">
                 <h2 style="margin:0">Quotes</h2>
+            <button class="icon-btn global-filter-btn" title="Filter by Date">📅</button>
                 <input class="search" id="quoteSearch" placeholder="Search quotes...">
                 <button class="btn primary" id="newQuoteBtn">+ New Quote</button>
             </div>
@@ -123,6 +124,7 @@ async function showQuoteForm(quote = null, isDuplicate = false) {
         <div class="card">
             <div class="toolbar">
                 <h2 style="margin:0">${isEdit ? 'Edit Quote' : 'New Quote'}</h2>
+            <button class="icon-btn global-filter-btn" title="Filter by Date">📅</button>
                 <button class="btn" id="cancelQuoteBtn">Cancel</button>
             </div>
 
