@@ -73,3 +73,120 @@ function setupLockScreen() {
 
 // Start app when DOM is ready
 document.addEventListener('DOMContentLoaded', initApp);
+
+// Top Bar Filter Toggle
+document.addEventListener('click', (e) => {
+    const filterBtn = e.target.closest('.global-filter-btn');
+    if (filterBtn) {
+        document.getElementById('filterMenuDrawer').classList.toggle('active');
+
+        // Populate inputs from state
+        document.getElementById('filterFromDate').value = window.AppFilter.fromDate;
+        document.getElementById('filterToDate').value = window.AppFilter.toDate;
+        document.getElementById('filterFromTime').value = window.AppFilter.fromTime;
+        document.getElementById('filterToTime').value = window.AppFilter.toTime;
+        document.getElementById('filterPreset').value = window.AppFilter.preset;
+    }
+});
+
+// Filter Presets Logic
+document.addEventListener('change', (e) => {
+    if (e.target.id === 'filterPreset') {
+        const val = e.target.value;
+        const fromDateEl = document.getElementById('filterFromDate');
+        const toDateEl = document.getElementById('filterToDate');
+
+        const today = new Date();
+        const formatDate = d => d.toISOString().split('T')[0];
+
+        if (val === 'today') {
+            fromDateEl.value = formatDate(today);
+            toDateEl.value = formatDate(today);
+        } else if (val === 'yesterday') {
+            const y = new Date(today); y.setDate(y.getDate() - 1);
+            fromDateEl.value = formatDate(y);
+            toDateEl.value = formatDate(y);
+        } else if (val === 'this_week') {
+            const start = new Date(today); start.setDate(start.getDate() - start.getDay());
+            fromDateEl.value = formatDate(start);
+            toDateEl.value = formatDate(today);
+        } else if (val === 'last_week') {
+            const start = new Date(today); start.setDate(start.getDate() - start.getDay() - 7);
+            const end = new Date(today); end.setDate(end.getDate() - end.getDay() - 1);
+            fromDateEl.value = formatDate(start);
+            toDateEl.value = formatDate(end);
+        } else if (val === 'this_month') {
+            const start = new Date(today.getFullYear(), today.getMonth(), 1);
+            fromDateEl.value = formatDate(start);
+            toDateEl.value = formatDate(today);
+        } else if (val === 'last_month') {
+            const start = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            const end = new Date(today.getFullYear(), today.getMonth(), 0);
+            fromDateEl.value = formatDate(start);
+            toDateEl.value = formatDate(end);
+        } else if (val === 'this_year') {
+            const start = new Date(today.getFullYear(), 0, 1);
+            fromDateEl.value = formatDate(start);
+            toDateEl.value = formatDate(today);
+        } else if (val === 'last_year') {
+            const start = new Date(today.getFullYear() - 1, 0, 1);
+            const end = new Date(today.getFullYear() - 1, 11, 31);
+            fromDateEl.value = formatDate(start);
+            toDateEl.value = formatDate(end);
+        } else {
+            // custom - don't overwrite user changes
+        }
+    }
+});
+
+// Apply / Clear Filter Logic
+document.addEventListener('click', (e) => {
+    if (e.target.id === 'applyFilterBtn') {
+        const fromDate = document.getElementById('filterFromDate').value;
+        const toDate = document.getElementById('filterToDate').value;
+        const fromTime = document.getElementById('filterFromTime').value;
+        const toTime = document.getElementById('filterToTime').value;
+        const preset = document.getElementById('filterPreset').value;
+
+        window.AppFilter.apply(fromDate, toDate, fromTime, toTime, preset);
+        document.getElementById('filterMenuDrawer').classList.remove('active');
+
+        // Re-render current route
+        if (window.appRouter && window.appRouter.currentRoute) {
+            window.appRouter.navigate(window.appRouter.currentRoute);
+        }
+    } else if (e.target.id === 'clearFilterBtn') {
+        window.AppFilter.clear();
+        document.getElementById('filterMenuDrawer').classList.remove('active');
+
+        // Re-render current route
+        if (window.appRouter && window.appRouter.currentRoute) {
+            window.appRouter.navigate(window.appRouter.currentRoute);
+        }
+    }
+});
+
+// Theme toggle override to use settings
+document.addEventListener('click', async (e) => {
+    const themeBtn = e.target.closest('#themeBtn');
+    if (themeBtn) {
+        // Simple toggle just flips light/dark, and unsets system
+        const currentIsDark = document.documentElement.dataset.theme === 'dark';
+        window.AppState.settings.themeMode = currentIsDark ? 'light' : 'dark';
+        await window.AppState.saveSettings();
+    }
+});
+
+
+// Update filter button state whenever route changes
+const originalNavigate = window.appRouter.navigate;
+window.appRouter.navigate = async function(name) {
+    await originalNavigate.call(this, name);
+    document.querySelectorAll('.global-filter-btn').forEach(btn => {
+        if (window.AppFilter.active) {
+            btn.classList.add('active-filter');
+        } else {
+            btn.classList.remove('active-filter');
+        }
+    });
+};

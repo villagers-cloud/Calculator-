@@ -5,6 +5,7 @@ window.appRouter.addRoute('clients', async () => {
         <div class="card">
             <div class="toolbar">
                 <h2 style="margin:0">Clients</h2>
+            <button class="icon-btn global-filter-btn" title="Filter by Date">📅</button>
                 <input class="search" id="clientSearch" placeholder="Search clients...">
                 <button class="btn primary" id="newClientBtn">+ New Client</button>
             </div>
@@ -14,6 +15,7 @@ window.appRouter.addRoute('clients', async () => {
 
     // Fetch and render
     let clients = await window.appDB.getAll('clients');
+    clients = filterDataByDate(clients, 'dateAdded');
 
     const renderClients = (filter = "") => {
         const list = clients.filter(c => c.name.toLowerCase().includes(filter.toLowerCase()));
@@ -78,6 +80,7 @@ function showClientForm(client = null) {
         <div class="card">
             <div class="toolbar">
                 <h2 style="margin:0">${isEdit ? 'Edit Client' : 'New Client'}</h2>
+            <button class="icon-btn global-filter-btn" title="Filter by Date">📅</button>
                 <button class="btn" id="cancelClientBtn">Cancel</button>
             </div>
             <form id="clientForm">

@@ -5,6 +5,7 @@ window.appRouter.addRoute('team', async () => {
         <div class="card">
             <div class="toolbar">
                 <h2 style="margin:0">Team</h2>
+            <button class="icon-btn global-filter-btn" title="Filter by Date">📅</button>
                 <button class="btn primary" id="newTeamBtn">+ Add Member</button>
             </div>
             <div id="teamList">Loading...</div>
@@ -67,6 +68,7 @@ function showTeamForm(member = null) {
         <div class="card">
             <div class="toolbar">
                 <h2 style="margin:0">${isEdit ? 'Edit Member' : 'New Member'}</h2>
+            <button class="icon-btn global-filter-btn" title="Filter by Date">📅</button>
                 <button class="btn" id="cancelTeamBtn">Cancel</button>
             </div>
             <form id="teamForm">
@@ -134,6 +136,7 @@ window.appRouter.addRoute('notes', async () => {
         <div class="card">
             <div class="toolbar">
                 <h2 style="margin:0">Global Notes</h2>
+            <button class="icon-btn global-filter-btn" title="Filter by Date">📅</button>
                 <button class="btn primary" id="newNoteBtn">+ New Note</button>
             </div>
             <div id="noteList">Loading...</div>

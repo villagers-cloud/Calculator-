@@ -53,6 +53,51 @@
   <button class="nav-btn" id="moreMenuToggle">☰<br>More</button>
 </nav>
 
+<!-- Filter Drawer -->
+<div class="more-drawer" id="filterMenuDrawer">
+    <div style="padding: 0 10px;">
+        <h3 style="margin-top:0">Filter by Date & Time</h3>
+        <div class="field">
+            <label>Presets</label>
+            <select id="filterPreset">
+                <option value="custom">Custom Range</option>
+                <option value="today">Today</option>
+                <option value="yesterday">Yesterday</option>
+                <option value="this_week">This week</option>
+                <option value="last_week">Last week</option>
+                <option value="this_month">This month</option>
+                <option value="last_month">Last month</option>
+                <option value="this_year">This year</option>
+                <option value="last_year">Last year</option>
+            </select>
+        </div>
+        <div class="row">
+            <div class="field">
+                <label>From Date</label>
+                <input type="date" id="filterFromDate">
+            </div>
+            <div class="field">
+                <label>To Date</label>
+                <input type="date" id="filterToDate">
+            </div>
+        </div>
+        <div class="row">
+            <div class="field">
+                <label>From Time (Optional)</label>
+                <input type="time" id="filterFromTime">
+            </div>
+            <div class="field">
+                <label>To Time (Optional)</label>
+                <input type="time" id="filterToTime">
+            </div>
+        </div>
+        <div style="display:flex; gap:10px; margin-top:20px;">
+            <button class="btn primary" style="flex:1" id="applyFilterBtn">Apply</button>
+            <button class="btn danger" style="flex:1" id="clearFilterBtn">Clear</button>
+        </div>
+    </div>
+</div>
+
 <!-- More Menu Drawer -->
 <div class="more-drawer" id="moreMenuDrawer">
     <div class="drawer-grid">
