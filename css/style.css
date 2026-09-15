@@ -184,3 +184,50 @@ input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 
     background: var(--accent);
     border-radius: 50%;
 }
+
+/* Custom Confirm Modal */
+.confirm-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    background: color-mix(in srgb, var(--bg) 80%, transparent);
+    backdrop-filter: blur(4px);
+    display: grid;
+    place-items: center;
+    padding: 20px;
+    animation: fadeIn 0.2s ease-out;
+}
+
+.confirm-box {
+    width: min(390px, 100%);
+    text-align: center;
+    padding: 24px;
+    animation: slideUp 0.2s ease-out;
+}
+
+.confirm-message {
+    font-size: 16px;
+    margin-bottom: 24px;
+    color: var(--text);
+    font-weight: 500;
+}
+
+.confirm-buttons {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.confirm-buttons .btn {
+    flex: 1;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes slideUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
