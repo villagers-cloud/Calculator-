@@ -259,17 +259,16 @@ runFdTest('Different custom dateField', () => {
 
 console.log(`\nTest Summary filterDataByDate: ${fdPassed} passed, ${fdFailed} failed`);
 if (fdFailed > 0) {
-    process.exit(1);
-}
+    p
 
-// ---------------------------------------------------------
+    // ---------------------------------------------------------
 // Tests for getTodayDate
 // ---------------------------------------------------------
 console.log('\nRunning tests for getTodayDate...\n');
 
 // Expose the function
 const getTodayDate = sandbox.getTodayDate;
-const OriginalDate = sandbox.Date; // Get the Date object from the sandbox context if it's there, but actually sandbox uses the host context for builtins like Date unless mocked.
+const OriginalDate = sandbox.Date;
 
 let gtdPassed = 0;
 let gtdFailed = 0;
@@ -287,11 +286,10 @@ function runGtdTest(name, testFn) {
 }
 
 // Since helpers.js is evaluated via vm, it uses the sandbox context's globals.
-// To mock Date, we need to inject a mock Date into the sandbox, then restore it.
+// To mock Date, inject a mock Date into the sandbox, then restore it.
 runGtdTest('should return the current date in YYYY-MM-DD format based on UTC', () => {
     const mockDate = new Date('2023-10-25T14:30:00Z');
 
-    // Mock the Date class in the sandbox
     sandbox.Date = class extends Date {
         constructor(...args) {
             if (args.length === 0) {
@@ -306,7 +304,6 @@ runGtdTest('should return the current date in YYYY-MM-DD format based on UTC', (
 
     const result = sandbox.getTodayDate();
 
-    // Restore
     delete sandbox.Date;
 
     assert.strictEqual(result, '2023-10-25');
