@@ -44,35 +44,54 @@ window.appRouter.addRoute('reports', async () => {
         </div>
     `;
 
-    const allPayments = await window.appDB.getAll('payments');
-    const allExpenses = await window.appDB.getAll('expenses');
-    const allClients = await window.appDB.getAll('clients');
-    const allProjects = await window.appDB.getAll('projects');
-    const allQuotes = await window.appDB.getAll('quotes');
+    document.getElementById('repRev').textContent = 'Loading...';
+    document.getElementById('repExp').textContent = 'Loading...';
+    document.getElementById('repNet').textContent = 'Loading...';
+    document.getElementById('repClients').textContent = '...';
+    document.getElementById('repProjects').textContent = '...';
+    document.getElementById('repQuotes').textContent = '...';
 
-    const payments = filterDataByDate(allPayments, 'date');
-    const expenses = filterDataByDate(allExpenses, 'date');
-    const clients = filterDataByDate(allClients, 'dateAdded');
-    const projects = filterDataByDate(allProjects, 'startDate');
-    const quotes = filterDataByDate(allQuotes, 'date');
+    try {
+        const [allPayments, allExpenses, allClients, allProjects, allQuotes] = await Promise.all([
+            window.appDB.getAll('payments'),
+            window.appDB.getAll('expenses'),
+            window.appDB.getAll('clients'),
+            window.appDB.getAll('projects'),
+            window.appDB.getAll('quotes')
+        ]);
 
-    const rev = payments.reduce((s, p) => s + (Number(p.amount) || 0), 0);
-    const exp = expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
-    const net = rev - exp;
+        const payments = filterDataByDate(allPayments, 'date');
+        const expenses = filterDataByDate(allExpenses, 'date');
+        const clients = filterDataByDate(allClients, 'dateAdded');
+        const projects = filterDataByDate(allProjects, 'startDate');
+        const quotes = filterDataByDate(allQuotes, 'date');
 
-    document.getElementById('repRev').textContent = formatMoney(rev, window.AppState.settings.currency);
-    document.getElementById('repExp').textContent = formatMoney(exp, window.AppState.settings.currency);
-    const netEl = document.getElementById('repNet');
-    netEl.textContent = formatMoney(net, window.AppState.settings.currency);
-    netEl.style.color = net >= 0 ? 'var(--green)' : 'var(--red)';
+        const rev = payments.reduce((s, p) => s + (Number(p.amount) || 0), 0);
+        const exp = expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
+        const net = rev - exp;
 
-    document.getElementById('repClients').textContent = clients.filter(c => c.status !== 'Inactive').length;
-    document.getElementById('repProjects').textContent = projects.filter(p => p.status === 'In Progress' || p.status === 'Planning').length;
-    document.getElementById('repQuotes').textContent = quotes.length;
+        document.getElementById('repRev').textContent = formatMoney(rev, window.AppState.settings.currency);
+        document.getElementById('repExp').textContent = formatMoney(exp, window.AppState.settings.currency);
+        const netEl = document.getElementById('repNet');
+        netEl.textContent = formatMoney(net, window.AppState.settings.currency);
+        netEl.style.color = net >= 0 ? 'var(--green)' : 'var(--red)';
+
+        document.getElementById('repClients').textContent = clients.filter(c => c.status !== 'Inactive').length;
+        document.getElementById('repProjects').textContent = projects.filter(p => p.status === 'In Progress' || p.status === 'Planning').length;
+        document.getElementById('repQuotes').textContent = quotes.length;
+    } catch (e) {
+        console.error("Failed to load reports data:", e);
+        document.getElementById('repRev').textContent = 'Error loading data';
+        document.getElementById('repExp').textContent = 'Error loading data';
+        document.getElementById('repNet').textContent = 'Error loading data';
+    }
 });
 
 // Settings & Data View
 window.appRouter.addRoute('settings', async () => {
+    if (!window.AppState.settings) {
+        await window.AppState.loadSettings();
+    }
     const container = document.getElementById('page-settings');
     container.innerHTML = `
       <div class="grid">
@@ -228,7 +247,10 @@ window.appRouter.addRoute('data', async () => {
 
     document.getElementById('page-data').innerHTML = `
         <div class="card">
-            <h2>Data Management (Backup / Restore)</h2>
+            <div class="toolbar">
+                <h2 style="margin:0">Data Management (Backup / Restore)</h2>
+                <button class="icon-btn global-filter-btn" title="Filter by Date">📅</button>
+            </div>
             <p class="muted">Your data is stored completely offline on this device. Back it up regularly.</p>
 
             <div style="display:flex; gap:10px; margin-top:20px; flex-wrap:wrap">

@@ -138,7 +138,12 @@ function filterDataByDate(data, dateField = 'date') {
         if (!itemDateStr) itemDateStr = item.created; // Fallback
         if (!itemDateStr) return true;
 
-        let itemDate = new Date(itemDateStr);
+        let parseStr = itemDateStr;
+        if (typeof parseStr === 'string' && parseStr.length === 10 && parseStr.includes('-')) {
+            parseStr += 'T00:00:00';
+        }
+
+        let itemDate = new Date(parseStr);
         if (isNaN(itemDate.getTime())) return true;
 
         if (filterFrom && itemDate < filterFrom) return false;
