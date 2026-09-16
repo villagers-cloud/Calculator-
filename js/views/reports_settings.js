@@ -44,11 +44,17 @@ window.appRouter.addRoute('reports', async () => {
         </div>
     `;
 
-    const payments = await window.appDB.getAll('payments');
-    const expenses = await window.appDB.getAll('expenses');
-    const clients = await window.appDB.getAll('clients');
-    const projects = await window.appDB.getAll('projects');
-    const quotes = await window.appDB.getAll('quotes');
+    const allPayments = await window.appDB.getAll('payments');
+    const allExpenses = await window.appDB.getAll('expenses');
+    const allClients = await window.appDB.getAll('clients');
+    const allProjects = await window.appDB.getAll('projects');
+    const allQuotes = await window.appDB.getAll('quotes');
+
+    const payments = filterDataByDate(allPayments, 'date');
+    const expenses = filterDataByDate(allExpenses, 'date');
+    const clients = filterDataByDate(allClients, 'dateAdded');
+    const projects = filterDataByDate(allProjects, 'startDate');
+    const quotes = filterDataByDate(allQuotes, 'date');
 
     const rev = payments.reduce((s, p) => s + (Number(p.amount) || 0), 0);
     const exp = expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
@@ -124,6 +130,8 @@ window.appRouter.addRoute('settings', async () => {
             <button class="btn primary" id="addDelBtn">Add</button>
           </div>
         </div>
+
+        <div id="settings-ai-container" class="col-12 card"></div>
       </div>
     `;
 
@@ -253,9 +261,10 @@ window.appRouter.addRoute('data', async () => {
     document.getElementById('exportJsonBtn').onclick = async () => {
         const stores = ['settings', 'clients', 'services', 'quotes', 'projects', 'tasks', 'invoices', 'payments', 'expenses', 'team', 'notes'];
         const dump = {};
-        for (const store of stores) {
+
+        await Promise.all(stores.map(async (store) => {
             dump[store] = await window.appDB.getAll(store);
-        }
+        }));
 
         const blob = new Blob([JSON.stringify(dump, null, 2)], { type: "application/json" });
         const filename = `AutomationManager_Backup_${getTodayDate()}.json`;
@@ -370,7 +379,7 @@ window.renderAiConnector = () => {
             </div>
             <div class="field">
                 <label>Gemini Model</label>
-                <input id="set-aiModelGemini" placeholder="gemini-1.5-flash" value="gemini-1.5-flash">
+                <input id="set-aiModelGemini" placeholder="gemini-3.8-flash" value="gemini-3.8-flash">
             </div>
         </div>
 
@@ -389,7 +398,7 @@ window.renderAiConnector = () => {
     document.getElementById('set-aiApiKeyOpenAI').value = s.aiApiKeyOpenAI || '';
     document.getElementById('set-aiModelOpenAI').value = s.aiModelOpenAI || 'gpt-4o-mini';
     document.getElementById('set-aiApiKeyGemini').value = s.aiApiKeyGemini || '';
-    document.getElementById('set-aiModelGemini').value = s.aiModelGemini || 'gemini-1.5-flash';
+    document.getElementById('set-aiModelGemini').value = s.aiModelGemini || 'gemini-3.8-flash';
 
     const toggleFields = () => {
         const prov = document.getElementById('set-aiProvider').value;
@@ -405,7 +414,7 @@ window.renderAiConnector = () => {
         s.aiApiKeyOpenAI = document.getElementById('set-aiApiKeyOpenAI').value.trim();
         s.aiModelOpenAI = document.getElementById('set-aiModelOpenAI').value.trim() || 'gpt-4o-mini';
         s.aiApiKeyGemini = document.getElementById('set-aiApiKeyGemini').value.trim();
-        s.aiModelGemini = document.getElementById('set-aiModelGemini').value.trim() || 'gemini-1.5-flash';
+        s.aiModelGemini = document.getElementById('set-aiModelGemini').value.trim() || 'gemini-3.8-flash';
 
         await window.AppState.saveSettings();
         alert("AI Credentials saved.");
@@ -458,7 +467,7 @@ window.renderAiConnector = () => {
 
             } else if (prov === 'gemini') {
                 const key = document.getElementById('set-aiApiKeyGemini').value.trim();
-                const model = document.getElementById('set-aiModelGemini').value.trim() || 'gemini-1.5-flash';
+                const model = document.getElementById('set-aiModelGemini').value.trim() || 'gemini-3.8-flash';
                 if (!key) throw new Error("Please enter a Gemini API key first.");
 
                 const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${key}`;

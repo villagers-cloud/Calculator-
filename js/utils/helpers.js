@@ -58,7 +58,7 @@ window.AppState = {
                 aiApiKeyOpenAI: "",
                 aiModelOpenAI: "gpt-4o-mini",
                 aiApiKeyGemini: "",
-                aiModelGemini: "gemini-1.5-flash"
+                aiModelGemini: "gemini-3.8-flash"
             };
             await window.appDB.put('settings', this.settings);
         }
@@ -182,3 +182,71 @@ async function saveFileToDevice(blob, filename) {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 }
+
+// Global Custom Confirm
+window.showConfirm = function(message) {
+    return new Promise((resolve) => {
+        // Create overlay
+        const overlay = document.createElement('div');
+        overlay.className = 'confirm-overlay';
+
+        // Create modal box
+        const modal = document.createElement('div');
+        modal.className = 'confirm-box card';
+
+        const msgEl = document.createElement('p');
+        msgEl.className = 'confirm-message';
+        msgEl.textContent = message;
+
+        const btnContainer = document.createElement('div');
+        btnContainer.className = 'confirm-buttons';
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'btn';
+        cancelBtn.textContent = 'Cancel';
+
+        const confirmBtn = document.createElement('button');
+        confirmBtn.className = 'btn danger';
+        confirmBtn.textContent = 'Confirm';
+
+        btnContainer.appendChild(cancelBtn);
+        btnContainer.appendChild(confirmBtn);
+        modal.appendChild(msgEl);
+        modal.appendChild(btnContainer);
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+
+        // Trap focus inside modal
+        confirmBtn.focus();
+
+        const cleanup = () => {
+            document.body.removeChild(overlay);
+            document.removeEventListener('keydown', keydownHandler);
+        };
+
+        const handleResult = (result) => {
+            cleanup();
+            resolve(result);
+        };
+
+        cancelBtn.onclick = () => handleResult(false);
+        confirmBtn.onclick = () => handleResult(true);
+        overlay.onclick = (e) => {
+            if (e.target === overlay) {
+                handleResult(false);
+            }
+        };
+
+        const keydownHandler = (e) => {
+            if (e.key === 'Escape') {
+                handleResult(false);
+            } else if (e.key === 'Enter') {
+                // If focus is not already on a button, confirm
+                if (document.activeElement !== cancelBtn && document.activeElement !== confirmBtn) {
+                    handleResult(true);
+                }
+            }
+        };
+        document.addEventListener('keydown', keydownHandler);
+    });
+};

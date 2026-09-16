@@ -335,7 +335,7 @@ window.appRouter.addRoute('expenses', async () => {
 
     document.getElementById('expList').onclick = async (e) => {
         if (e.target.dataset.delExp) {
-            if (confirm('Delete this expense?')) {
+            if (await window.showConfirm('Delete this expense?')) {
                 await window.appDB.delete('expenses', e.target.dataset.delExp);
                 expenses = await window.appDB.getAll('expenses');
                 renderExpenses();
