@@ -1,4 +1,4 @@
-node_modules
+node_modules/
 run_tests.js
 package.json
 package-lock.json

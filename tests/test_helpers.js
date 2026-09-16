@@ -259,5 +259,101 @@ runFdTest('Different custom dateField', () => {
 
 console.log(`\nTest Summary filterDataByDate: ${fdPassed} passed, ${fdFailed} failed`);
 if (fdFailed > 0) {
+    p
+
+    // ---------------------------------------------------------
+// Tests for getTodayDate
+// ---------------------------------------------------------
+console.log('\nRunning tests for getTodayDate...\n');
+
+// Expose the function
+const getTodayDate = sandbox.getTodayDate;
+const OriginalDate = sandbox.Date;
+
+let gtdPassed = 0;
+let gtdFailed = 0;
+
+function runGtdTest(name, testFn) {
+    try {
+        testFn();
+        console.log(`✅ PASS: ${name}`);
+        gtdPassed++;
+    } catch (error) {
+        console.error(`❌ FAIL: ${name}`);
+        console.error(error);
+        gtdFailed++;
+    }
+}
+
+// Since helpers.js is evaluated via vm, it uses the sandbox context's globals.
+// To mock Date, inject a mock Date into the sandbox, then restore it.
+runGtdTest('should return the current date in YYYY-MM-DD format based on UTC', () => {
+    const mockDate = new Date('2023-10-25T14:30:00Z');
+
+    sandbox.Date = class extends Date {
+        constructor(...args) {
+            if (args.length === 0) {
+                return mockDate;
+            }
+            return new Date(...args);
+        }
+        static now() {
+            return mockDate.getTime();
+        }
+    };
+
+    const result = sandbox.getTodayDate();
+
+    delete sandbox.Date;
+
+    assert.strictEqual(result, '2023-10-25');
+});
+
+runGtdTest('should handle leap years correctly', () => {
+    const mockDate = new Date('2024-02-29T10:00:00Z');
+
+    sandbox.Date = class extends Date {
+        constructor(...args) {
+            if (args.length === 0) {
+                return mockDate;
+            }
+            return new Date(...args);
+        }
+        static now() {
+            return mockDate.getTime();
+        }
+    };
+
+    const result = sandbox.getTodayDate();
+
+    delete sandbox.Date;
+
+    assert.strictEqual(result, '2024-02-29');
+});
+
+runGtdTest('should handle different timezones if they result in different UTC days', () => {
+    const mockDate = new Date('2023-10-26T01:00:00Z');
+
+    sandbox.Date = class extends Date {
+        constructor(...args) {
+            if (args.length === 0) {
+                return mockDate;
+            }
+            return new Date(...args);
+        }
+        static now() {
+            return mockDate.getTime();
+        }
+    };
+
+    const result = sandbox.getTodayDate();
+
+    delete sandbox.Date;
+
+    assert.strictEqual(result, '2023-10-26');
+});
+
+console.log(`\nTest Summary getTodayDate: ${gtdPassed} passed, ${gtdFailed} failed`);
+if (gtdFailed > 0) {
     process.exit(1);
 }
