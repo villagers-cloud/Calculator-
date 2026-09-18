@@ -503,6 +503,33 @@ window.renderAiConnector = () => {
 
                 if (!response.ok) {
                     const errBody = await response.json().catch(()=>({}));
+
+                    if (response.status === 429) {
+                        let retryMsg = "Gemini API quota/rate limit exceeded. Please check your Google AI Studio/API project quota or billing, then try again.";
+                        const retryAfter = response.headers.get('Retry-After');
+                        if (retryAfter) {
+                            const seconds = parseInt(retryAfter, 10);
+                            if (!isNaN(seconds)) {
+                                if (seconds > 60) {
+                                    retryMsg += ` Please try again in about ${Math.ceil(seconds/60)} minutes.`;
+                                } else {
+                                    retryMsg += ` Please try again in about ${seconds} seconds.`;
+                                }
+                            }
+                        }
+                        const err = new Error(retryMsg);
+                        err.type = 'QUOTA';
+                        throw err;
+                    } else if (response.status === 401 || response.status === 403) {
+                        const err = new Error("Authentication failed. Please check your Gemini API key and permissions.");
+                        err.type = 'AUTH';
+                        throw err;
+                    } else if (response.status === 404) {
+                        const err = new Error("Model or endpoint not found. Please verify your Gemini model name.");
+                        err.type = 'CONFIG';
+                        throw err;
+                    }
+
                     throw new Error(`Gemini Error: ${response.status} ${errBody.error?.message || response.statusText}`);
                 }
 
@@ -519,7 +546,20 @@ window.renderAiConnector = () => {
             }
         } catch (err) {
             const elapsed = Date.now() - startTime;
-            resEl.textContent = `❌ Connection failed: ${err.message} (${elapsed}ms)`;
+            let statusStr = "Connection failed";
+
+            // Check specific types from our manual throws
+            if (err.type === 'QUOTA') {
+                statusStr = "Quota exceeded";
+            } else if (err.type === 'AUTH') {
+                statusStr = "Authentication failed";
+            } else if (err.type === 'CONFIG') {
+                statusStr = "Configuration error";
+            } else if (err.message.includes("fetch") || err.message.includes("NetworkError") || err.message.includes("Failed to fetch")) {
+                statusStr = "Network error";
+            }
+
+            resEl.textContent = `❌ ${statusStr}: ${err.message} (${elapsed}ms)`;
             resEl.style.backgroundColor = 'var(--red-soft)';
             resEl.style.color = 'var(--red)';
         }
